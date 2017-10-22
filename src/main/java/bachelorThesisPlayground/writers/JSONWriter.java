@@ -108,7 +108,7 @@ public class JSONWriter {
 			for (int i = 0; i < edgeArray.length; i++) {
 				writer.print("{ "
 								+"\"material\":\"" 
-								+edgeArray[i].material
+								+edgeArray[i].material.replace("\"", "\\\"")
 								+"\", "
 								+"\"diameter\":" 
 								+edgeArray[i].diameter

@@ -1,5 +1,7 @@
 package bachelorThesisPlayground;
 
+import java.util.StringJoiner;
+
 public class Edge {
 	public int id;
 	public double length;
@@ -16,5 +18,28 @@ public class Edge {
 		id = eid;
 		a = new Vertex(aid);
 		b = new Vertex(bid);
+	}
+
+	@Override
+	public boolean equals(Object o){
+		if (!(o instanceof Edge)) return false; 
+		return ((Edge)o).id == this.id;
+	}
+
+	@Override
+	public int hashCode(){
+		return id;
+	}
+	
+	@Override
+	public String toString() {
+		return new StringJoiner(", ","[","]")
+				.add(""+id)
+				.add(""+a)
+				.add(""+b)
+				.add(""+length)
+				.add(""+diameter)
+				.add(material)
+				.toString();
 	}
 }

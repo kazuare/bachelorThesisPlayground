@@ -1,5 +1,7 @@
 package bachelorThesisPlayground;
 
+import java.util.StringJoiner;
+
 public class Vertex {
 	public int id;
 	public double x = -1;
@@ -15,13 +17,24 @@ public class Vertex {
 		this.x = x;
 		this.y = y;
 	}
-	
-	public boolean equals(Object o){
+
+	@Override
+	public boolean equals(Object o) {
 		if (!(o instanceof Vertex)) return false; 
 		return ((Vertex)o).id == this.id;
 	}
-	
-	public int hashCode(){
+
+	@Override
+	public int hashCode() {
 		return id;
+	}
+
+	@Override
+	public String toString() {
+		return new StringJoiner(", ","[","]")
+				.add(""+id)
+				.add(""+x)
+				.add(""+y)
+				.toString();
 	}
 }

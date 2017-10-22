@@ -1,55 +1,95 @@
 package bachelorThesisPlayground;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
-import org.educationalProject.surfacePathfinder.visualization.DecolorizedMapVisualizer;
-import org.educationalProject.surfacePathfinder.visualization.Point;
+import org.educationalProject.surfacePathfinder.visualization.DisplayMode;
+import org.educationalProject.surfacePathfinder.visualization.NetworkVisualizer;
+import org.educationalProject.surfacePathfinder.visualization.Screenshooter;
 import org.educationalProject.surfacePathfinder.visualization.SwingWindow;
-import org.jgrapht.graph.DefaultWeightedEdge;
-import org.jgrapht.graph.SimpleWeightedGraph;
-
+import org.jgrapht.graph.DefaultDirectedWeightedGraph;
 import bachelorThesisPlayground.normalizers.ConvergenceImprover;
 import bachelorThesisPlayground.normalizers.Normalizer;
 import bachelorThesisPlayground.readers.CSVGraphReader;
 import bachelorThesisPlayground.readers.ExcelGraphReader;
+import bachelorThesisPlayground.readers.JsonGraphReader;
 import bachelorThesisPlayground.writers.JSONWriter;
-import bachelorThesisPlayground.writers.SSVGraphWriter;
-import bachelorThesisPlayground.writers.WriterForGephy;
 
 public class Main {
 
 	public static void main(String[] args) {
 		//writeJSONGraphForD3();
+		//we do layout in d3 and get FINAL_ALL_POINTS.json
 		
-		
-		/*
-		edges 
-		
-		HashMap<Integer, Point> points = new HashMap<>();
-		for (Edge e : edges.values()) {
-			if(!points.containsKey(e.a.id))
-				points.put(e.a.id, new Point(e.a.x, e.a.y, 0, e.a.id));
-			if(!points.containsKey(e.b.id))
-				points.put(e.b.id, new Point(e.b.x, e.b.y, 0, e.b.id));
-		}
+		ArrayList<Vertex> points = JsonGraphReader.readNodes("C:\\Users\\test\\Desktop\\диплом\\FINAL_ALL_POINTS.json");
+		ArrayList<Edge> edges = JsonGraphReader.readEdges("C:\\Users\\test\\Desktop\\диплом\\d3full.json");
 
-		SimpleWeightedGraph<Point,DefaultWeightedEdge> graph = new SimpleWeightedGraph<Point,DefaultWeightedEdge>(DefaultWeightedEdge.class);
+		HashMap<Integer,Edge> idToEdge = new HashMap<>(edges.size());
+		for(Edge e : edges)
+			idToEdge.put(e.id, e);
 		
-		for(Point p : points.values())
+		ExcelGraphReader.filterUnusedEdges(idToEdge);
+		ConvergenceImprover.removeSmallConnectedComponents(idToEdge, true, 16);
+		
+		edges = new ArrayList<Edge>(idToEdge.values());
+		Collections.sort(edges, (a,b)->Integer.compare(a.id, b.id));
+		
+		Set<Vertex> usedPoints = new HashSet<Vertex>(points.size());
+		for (Edge e : edges){
+			usedPoints.add(e.a);
+			usedPoints.add(e.b);		
+		}
+		
+		points.removeIf(v->!usedPoints.contains(v));
+		
+	    double minX = points.stream().mapToDouble(p->p.x).min().getAsDouble();
+	    double minY = points.stream().mapToDouble(p->p.y).min().getAsDouble();
+	   
+	    points.stream()
+		    .forEach(v->{
+		    	v.x -= minX;
+		    	v.y -= minY;
+		    });
+		
+		DefaultDirectedWeightedGraph<Vertex,Edge> graph = new DefaultDirectedWeightedGraph<Vertex,Edge>(Edge.class);
+		
+		HashMap<Integer, Vertex> idToVertex = new HashMap<Integer, Vertex>(points.size());
+		for (Vertex p : points){
+			idToVertex.put(p.id, p);
 			graph.addVertex(p);
+		}
 		
-		for(Edge e : edges.values())
-			if(!graph.containsEdge(points.get(e.a.id), points.get(e.b.id)) && !points.get(e.a.id).equals(points.get(e.b.id))){
-				System.out.println(points.get(e.a.id) + " " + points.get(e.b.id));
-				graph.addEdge(points.get(e.a.id), points.get(e.b.id));
-			}
+		for (Edge e: edges) {
+			e.a = idToVertex.get(e.a.id);
+			e.b = idToVertex.get(e.b.id);
+			graph.addEdge(e.a, e.b, e);
+			System.out.println("filling graph with edge: " + e);
+		}
 		
+		//DefaultDirectedWeightedGraph<Vertex,Edge> graph = new DefaultDirectedWeightedGraph<Vertex,Edge>(Edge.class);
+		//graph.addVertex(new Vertex(2,3,4));
 		
-		DecolorizedMapVisualizer vis = new DecolorizedMapVisualizer();
-		vis.setData(graph, null);
-		SwingWindow.start(vis, 700, 700, "pipes");*/
+		DisplayMode.setMode("screenshot");
+		
+		NetworkVisualizer visScreenshot = new NetworkVisualizer()
+				.setData(graph)
+				.setDefaultWidth(10000)
+				.calculateWeightAndHeight();
+		Screenshooter.start(visScreenshot, visScreenshot.getWidth() + 50, visScreenshot.getHeight()+ 50);
+
+		DisplayMode.setMode("screen");
+		
+		NetworkVisualizer vis = new NetworkVisualizer()
+				.setData(graph)
+				.setDefaultWidth(800)
+				.calculateWeightAndHeight();
+		SwingWindow.start(vis, vis.getWidth() + 50, vis.getHeight()+ 50, "pipes");
+		
 	}
 	
 	//парсим файлы, пишем в джсон файл для d3 force v4
@@ -72,7 +112,7 @@ public class Main {
 		
 		//убираем компоненты связности, где нет ни одной фиксированной точки
 		//убираем также слишком маленькие компоненты
-		ConvergenceImprover.removeSmallConnectedComponents(edges);
+		ConvergenceImprover.removeSmallConnectedComponents(edges, false, 50);
 		
 		//приводим идентификаторы точек к виду 0...n-1
 		Normalizer.normalizeIds(edges);

@@ -18,7 +18,7 @@ import bachelorThesisPlayground.Edge;
 
 public class ConvergenceImprover {
 	
-	public static Map<Integer, Edge> removeSmallConnectedComponents(Map<Integer, Edge> edges) {
+	public static Map<Integer, Edge> removeSmallConnectedComponents(Map<Integer, Edge> edges, boolean ignoreFixedCoordsCondition, int cuttingSizeThreshold) {
 		HashMap<Integer, Point> points = new HashMap<>();
 		for (Edge e : edges.values()) {
 			if(!points.containsKey(e.a.id))
@@ -39,8 +39,8 @@ public class ConvergenceImprover {
 		ConnectivityInspector<Point,DefaultWeightedEdge> inspector = new ConnectivityInspector<Point,DefaultWeightedEdge>(graph);
 		List<Set<Point>> connectedComponents = inspector.connectedSets();
 		Set<Set<Point>> acceptedComponents = connectedComponents.stream()
-				.filter(set->set.size()>50)
-				.filter(set->hasFixedCoords(set))
+				.filter(set->set.size()>cuttingSizeThreshold)
+				.filter(set->hasFixedCoords(set) || ignoreFixedCoordsCondition)
 				.collect(Collectors.toSet());
 		Set<Integer> acceptedPoints = new HashSet<>();
 		for (Set<Point> acceptedComponent : acceptedComponents) {
