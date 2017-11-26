@@ -28,4 +28,12 @@ public class DisplayMode {
 			return 6;
 		}
 	}
+
+	public static double getPolygonDiameter(){
+		if("screen".equals(mode)){
+			return 4;
+		} else {
+			return 10;
+		}
+	}
 }

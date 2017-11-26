@@ -50,4 +50,33 @@ public class CSVGraphReader {
 			e.printStackTrace();
 		}
 	}
+	
+	public static Vertex getPointWithId(String file, int idToFind){
+		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+			String sCurrentLine;
+	
+			br.readLine();
+			while ((sCurrentLine = br.readLine()) != null) {
+				int id = Integer.parseInt(sCurrentLine.substring(0, sCurrentLine.indexOf(';')));
+				
+				if (id == idToFind) {
+
+					sCurrentLine = sCurrentLine.substring(sCurrentLine.indexOf(';') + 1);
+					
+					double x = Double.parseDouble(sCurrentLine.substring(0, sCurrentLine.indexOf(';')));
+					sCurrentLine = sCurrentLine.substring(sCurrentLine.indexOf(';') + 1);
+					
+					double y = Double.parseDouble(sCurrentLine);
+					
+					return new Vertex(id, x, y);
+				} else continue;
+				
+			}
+			
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
 }

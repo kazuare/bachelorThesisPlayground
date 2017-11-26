@@ -88,11 +88,16 @@ public class JSONWriter {
 				writer.print("{\"id\": \"" + array[i].id + "\",");
 				if (!array[i].fixed) {
 					writer.print("\"x\": " + array[i].x + ", ");
-					writer.print("\"y\": " + array[i].y);
+					writer.print("\"y\": " + array[i].y + ", ");
 				} else {
 					writer.print("\"fx\": " + array[i].x + ", ");
-					writer.print("\"fy\": " + array[i].y);
+					writer.print("\"fy\": " + array[i].y + ", ");
 				}				
+
+				writer.print("\"oldId\": " + array[i].oldId + ", ");
+				
+				writer.print("\"type\": \"" + array[i].type + "\"");				
+				
 				writer.print(" }");			
 				
 				if (i != array.length - 1) {
@@ -108,7 +113,7 @@ public class JSONWriter {
 			for (int i = 0; i < edgeArray.length; i++) {
 				writer.print("{ "
 								+"\"material\":\"" 
-								+edgeArray[i].material.replace("\"", "\\\"")
+								+((edgeArray[i].material==null) ? "-1" : edgeArray[i].material.replace("\"", "\\\""))
 								+"\", "
 								+"\"diameter\":" 
 								+edgeArray[i].diameter

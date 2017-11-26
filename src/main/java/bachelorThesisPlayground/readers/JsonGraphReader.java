@@ -45,6 +45,35 @@ public class JsonGraphReader {
 		return null;	
 	}
 	
+	public static void populatePointsWithParameters(ArrayList<Vertex> points, String file) {
+		try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"))) {
+			Map<Integer, Integer> idToOldId = new HashMap<>();
+			Map<Integer, String> idToType = new HashMap<>();
+
+			br.readLine();	
+			br.readLine();	
+			String line = br.readLine();		
+			while (line.charAt(line.length()-1)==',') {
+				JSONObject obj = new JSONObject(line.substring(0,line.length()-1));
+				idToOldId.put(obj.getInt("id"), obj.getInt("oldId"));
+				idToType.put(obj.getInt("id"), obj.getString("type"));
+				line = br.readLine();
+			}
+			JSONObject obj = new JSONObject(line);
+			idToOldId.put(obj.getInt("id"), obj.getInt("oldId"));
+			idToType.put(obj.getInt("id"), obj.getString("type"));
+			
+			for (Vertex p : points) {
+				p.oldId = idToOldId.get(p.id);
+				p.type = idToType.get(p.id);
+			}
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+			
+	}
+	
 	public static ArrayList<Edge> readEdges(String file) {
 		try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"))) {
 			String line = null;			

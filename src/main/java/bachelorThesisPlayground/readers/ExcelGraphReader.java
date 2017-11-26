@@ -1,12 +1,14 @@
 package bachelorThesisPlayground.readers;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import bachelorThesisPlayground.Edge;
+import bachelorThesisPlayground.Vertex;
 
 public class ExcelGraphReader {	
 	public static Map<Integer, Edge> getEdgeSkeletons(String file){
@@ -35,6 +37,37 @@ public class ExcelGraphReader {
 		return null;
 	}	
 
+	public static void populatePointsWithParameters(Map<Integer, Edge> edges, String file){
+		ExcelReader reader = new ExcelReader();
+		try {
+			reader.init(file);			
+			reader.hasNext();reader.next(); //skip first line
+
+			int i = 0 ;
+			Map<Integer, String> pointIdToPointType = new HashMap<>();
+			while(reader.hasNext()){
+				List<String> line = reader.next();
+				pointIdToPointType.put((int)Double.parseDouble(line.get(1)), line.get(2));		
+				System.out.println(i++);
+			}
+			reader.close();
+			
+			i = 0; 
+			for (Edge e : edges.values()) {
+				e.a.type = pointIdToPointType.get(e.a.id);
+				e.b.type = pointIdToPointType.get(e.b.id);
+			
+				e.a.oldId = e.a.id;
+				e.b.oldId = e.b.id;
+				
+				System.out.println(i++);
+			}
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public static void populateEdgeParameters(Map<Integer, Edge> edges, String file){
 		ExcelReader reader = new ExcelReader();
 		try {
@@ -57,10 +90,10 @@ public class ExcelGraphReader {
 		}
 	}
 	
-	public static void filterUnusedEdges(Map<Integer, Edge> edges){
+	public static void filterUnusedEdges(Map<Integer, Edge> edges, String file){
 		ExcelReader reader = new ExcelReader();
 		try {
-			reader.init("C:\\Users\\test\\Desktop\\диплом\\2016_07_25_дуги_4_секторов_Южной.xlsx");
+			reader.init(file);
 			reader.hasNext();reader.next(); //skip first line
 			
 			int i = 0;
