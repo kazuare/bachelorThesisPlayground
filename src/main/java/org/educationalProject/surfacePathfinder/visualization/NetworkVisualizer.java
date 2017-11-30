@@ -83,7 +83,7 @@ public class NetworkVisualizer extends Visualizer{
 		gl2.glPointSize((float)DisplayMode.getBigPointSize()*1.5f);
 		gl2.glBegin(GL.GL_POINTS);        	
 		for (Vertex v : graph.vertexSet()) {
-			if(v.canBeLocked)
+			if(v.locked)
 				drawColoredPoint(gl2, v, 1f, 0f, 0f);
 		}		
 		gl2.glEnd();

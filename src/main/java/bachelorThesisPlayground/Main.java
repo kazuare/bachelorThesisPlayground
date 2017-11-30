@@ -1,5 +1,11 @@
 package bachelorThesisPlayground;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -108,7 +114,10 @@ public class Main {
 				usedPoints.add(e.b);		
 			}
 			points.removeIf(v->!usedPoints.contains(v));
-								
+				
+			//update valve statuses
+			CSVGraphReader.updateStatusOfValves(points, "C:\\Users\\test\\Desktop\\диплом\\положения_кранов.csv");
+			
 			//now we want to normalize points coordinates (normalization can be ruined after layouting)
 			double minX = points.stream().mapToDouble(p->p.x).min().getAsDouble();
 			double minY = points.stream().mapToDouble(p->p.y).min().getAsDouble();
@@ -210,7 +219,14 @@ public class Main {
 					.setLabelDrawing(true)
 					.calculateWeightAndHeight();
 			Screenshooter.start(visScreenshot, visScreenshot.getWidth() + 50, visScreenshot.getHeight()+ 50);
-			
+
+			Path source = FileSystems.getDefault().getPath("c:\\users\\test\\desktop\\yo.png");
+			Path out = FileSystems.getDefault().getPath("yo.png");
+			try {
+			    Files.copy(source, out, StandardCopyOption.REPLACE_EXISTING);
+			} catch (IOException e) {
+			    e.printStackTrace();
+			}
 
 			//draw on screen
 			DisplayMode.setMode("screen");

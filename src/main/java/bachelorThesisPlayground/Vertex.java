@@ -11,6 +11,7 @@ public class Vertex {
 	public boolean pumpStationEntry = false;
 	public boolean pumpStationExit = false;
 	public boolean canBeLocked = false;
+	public boolean locked = false;
 	public String type = null;
 	
 	

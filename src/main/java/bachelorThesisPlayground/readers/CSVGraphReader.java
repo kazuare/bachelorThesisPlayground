@@ -3,6 +3,7 @@ package bachelorThesisPlayground.readers;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -78,5 +79,33 @@ public class CSVGraphReader {
 			e.printStackTrace();
 		}
 		return null;
+	}
+	
+	public static void updateStatusOfValves(ArrayList<Vertex> points, String file){
+		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+			String sCurrentLine;
+						
+			br.readLine();
+			while ((sCurrentLine = br.readLine()) != null) {
+				int id = Integer.parseInt(sCurrentLine.substring(0, sCurrentLine.indexOf(',')));
+				sCurrentLine = sCurrentLine.substring(sCurrentLine.indexOf(',') + 1);
+				
+				//dont need type of vertex
+				sCurrentLine = sCurrentLine.substring(sCurrentLine.indexOf(',') + 1);
+				
+				boolean status = Integer.parseInt(sCurrentLine) == 1;
+				
+				for(int i = 0; i < points.size(); i++) {
+					if (points.get(i).oldId == id) {
+						System.out.println("point with id " + id + " is " + (status?"":"not") + " locked");
+						points.get(i).locked = status;
+					}
+				}
+			}
+			
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }
