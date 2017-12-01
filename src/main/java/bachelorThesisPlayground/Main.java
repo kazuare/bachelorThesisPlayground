@@ -7,10 +7,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -135,10 +137,10 @@ public class Main {
 			//System.out.println(points.stream().max((a,b)->Double.compare(a.x, b.x)).get());
 			//System.out.println(points.stream().max((a,b)->Double.compare(a.y, b.y)).get());
 			
-			double lowX = 3300;
-			double lowY = 3300;
-			double highX = 5000;
-			double highY = 5000;
+			double lowX = 5000;
+			double lowY = 4950;
+			double highX = 5500;
+			double highY = 5450;
 			
 			
 			HashMap<Integer, Vertex> idToVertex = new HashMap<Integer, Vertex>(points.size());
@@ -259,6 +261,33 @@ public class Main {
 					pointToDelete = (graph.edgesOf(e.a).size() < graph.edgesOf(e.b).size()) ? e.a : e.b;
 				}
 				return new Pair<>(e, pointToDelete);
+			}
+		}
+		
+		edgeIterator = graph.edgeSet().iterator();
+		
+		List<Integer> bannedVertices = Arrays.asList(new Integer[]{
+				178370501, 177782701, 104960501, 188659001, 104780601, 188658601, 104834601, 178381001, 104863801,
+				104923001, 104780201, 104780301, 104781001, 181274401, 104946801, 104960801, 104949101, 104961201,
+				104923101, 178937101, 104881901, 188658801, 104948201, 104957101, 104881901, 104959901, 104918001, 
+				104916501, 178936901, 104863701, 199743001, 178930601, 104958001, 104956001, 104958101, 104923601, 
+				104863701, 104958701, 104834401, 104948901, 104845201, 104961301, 104957401, 104958501, 104881501,
+				180105501, 177172701, 104924001, 178936801, 104947401, 104959701, 104925101, 104924401, 104949501, 
+				104948401, 104959101, 104923301, 104959601, 104958601, 104911201, 203199401, 104893701, 104845301, 
+				178934101, 181271701, 104958801, 104960401, 188658901, 104947301, 104947501, 104947601, 104961901, 
+				104924601, 104947901, 104956301, 104947201, 104961401, 180683201, 104845101, 104866401, 104881601, 
+				104956901, 189236701, 104864101, 104949001, 104893901, 104865901, 104957301, 104956601, 104958201, 
+				104960101, 203199501, 203199301, 104962101, 104924901, 104865801, 104957501, 104959401, 104959301, 
+				104959501, 104949601, 104948501, 104863401, 104863301
+				});
+		
+		while (edgeIterator.hasNext()) {
+			Edge e = edgeIterator.next();
+			if (bannedVertices.contains(new Integer(e.a.oldId))) {				
+				return new Pair<>(e, e.a);
+			}
+			if (bannedVertices.contains(new Integer(e.b.oldId))) {				
+				return new Pair<>(e, e.b);
 			}
 		}
 		
