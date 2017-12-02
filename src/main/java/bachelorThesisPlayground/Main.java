@@ -177,7 +177,7 @@ public class Main {
 			}
 			
 			System.out.println(graph.vertexSet().size());
-			
+/*
 			double edgeDeletingThreshold = 20;//8;
 			
 			Pair<Edge, Vertex> edgeAndPointToDelete = findEdgeAndPointToDelete(graph, edgeDeletingThreshold);
@@ -215,7 +215,7 @@ public class Main {
 							
 				edgeAndPointToDelete = findEdgeAndPointToDelete(graph, edgeDeletingThreshold);
 			}
-
+*/
 			System.out.println(graph.vertexSet().size());
 			
 			List<Vertex> pumpStations = graph.vertexSet()
