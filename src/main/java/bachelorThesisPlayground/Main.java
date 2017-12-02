@@ -12,16 +12,21 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 
 import org.educationalProject.surfacePathfinder.visualization.DisplayMode;
 import org.educationalProject.surfacePathfinder.visualization.NetworkVisualizer;
 import org.educationalProject.surfacePathfinder.visualization.Screenshooter;
 import org.educationalProject.surfacePathfinder.visualization.SwingWindow;
+import org.jgrapht.WeightedGraph;
 import org.jgrapht.alg.util.Pair;
 import org.jgrapht.graph.DefaultDirectedWeightedGraph;
+import org.jgrapht.graph.SimpleWeightedGraph;
+
 import bachelorThesisPlayground.normalizers.ConvergenceImprover;
 import bachelorThesisPlayground.normalizers.Normalizer;
 import bachelorThesisPlayground.readers.CSVGraphReader;
@@ -131,7 +136,7 @@ public class Main {
 				});			
 			    	  
 			//construct graph 
-			DefaultDirectedWeightedGraph<Vertex,Edge> graph = new DefaultDirectedWeightedGraph<Vertex,Edge>(Edge.class);
+			SimpleWeightedGraph<Vertex,Edge> graph = new SimpleWeightedGraph<Vertex,Edge>(Edge.class);
 			
 			boolean filterByCoords = false;
 			//System.out.println(points.stream().max((a,b)->Double.compare(a.x, b.x)).get());
@@ -171,7 +176,7 @@ public class Main {
 			
 			System.out.println(graph.vertexSet().size());
 			
-			double edgeDeletingThreshold = 1.01;
+			double edgeDeletingThreshold = 8;
 			
 			Pair<Edge, Vertex> edgeAndPointToDelete = findEdgeAndPointToDelete(graph, edgeDeletingThreshold);
 			while (edgeAndPointToDelete != null){
@@ -210,6 +215,28 @@ public class Main {
 			}
 
 			System.out.println(graph.vertexSet().size());
+			
+			Queue<Vertex> queue = new LinkedList<Vertex>();
+			Set<Vertex> visited = new HashSet<>();
+			Vertex root = graph.vertexSet().stream().filter(p->p.oldId==106664401).findFirst().get();
+			queue.add(root);
+			visited.add(root);
+			while(!queue.isEmpty()) {
+				Vertex node = queue.remove();
+				Iterator<Edge> it = graph.edgesOf(node).iterator();
+				while (it.hasNext()) {
+					Edge e = it.next();
+					Vertex child = e.a.equals(node)?e.b:e.a;
+					if (!visited.contains(child) && !child.locked && !child.betweenSectorBlock) {
+						queue.add(child);
+						visited.add(child);		
+						child.colored = true;
+						child.r = 1;
+						child.g = 0;
+						child.b = 0;
+					}
+				}
+			}			
 			//display 
 				
 			//save as png file
@@ -241,14 +268,14 @@ public class Main {
 						
 	}
 	
-	public static Pair<Edge, Vertex> findEdgeAndPointToDelete(DefaultDirectedWeightedGraph<Vertex,Edge> graph, double edgeDeletingThreshold) {
+	public static Pair<Edge, Vertex> findEdgeAndPointToDelete(WeightedGraph<Vertex,Edge> graph, double edgeDeletingThreshold) {
 		Iterator<Edge> edgeIterator = graph.edgeSet().iterator();
 		
 		while (edgeIterator.hasNext()) {
 			Edge e = edgeIterator.next();
 			if (e.length < edgeDeletingThreshold) {
-				boolean aCannotBeDeleted = e.a.fixed || graph.edgesOf(e.a).size() == 1 || e.a.pumpStationEntry || e.a.pumpStationExit || e.a.canBeLocked;
-				boolean bCannotBeDeleted = e.b.fixed || graph.edgesOf(e.b).size() == 1 || e.b.pumpStationEntry || e.b.pumpStationExit || e.b.canBeLocked;				
+				boolean aCannotBeDeleted = e.a.fixed || graph.edgesOf(e.a).size() == 1 || e.a.pumpStationEntry || e.a.pumpStationExit || e.a.locked || e.a.betweenSectorBlock;
+				boolean bCannotBeDeleted = e.b.fixed || graph.edgesOf(e.b).size() == 1 || e.b.pumpStationEntry || e.b.pumpStationExit || e.b.locked || e.b.betweenSectorBlock;				
 				
 				Vertex pointToDelete;
 				if (aCannotBeDeleted && bCannotBeDeleted) {
@@ -291,6 +318,36 @@ public class Main {
 			}
 		}
 		
+		edgeIterator = graph.edgeSet().iterator();
+		/*
+		Iterator<Vertex> pointIterator = graph.vertexSet().iterator();
+				
+		while (pointIterator.hasNext()) {
+			Vertex p = pointIterator.next();
+			boolean cannotBeDeleted = p.fixed || p.pumpStationEntry || p.pumpStationExit || p.locked;
+			Set<Edge> edges = graph.edgesOf(p);
+			if (edges.size() == 2 && !cannotBeDeleted) {
+				Iterator<Edge> edgeRetriever = edges.iterator();
+				edgeRetriever.hasNext();
+				Edge edgeA = edgeRetriever.next();
+				edgeRetriever.hasNext();
+				Edge edgeB = edgeRetriever.next();
+				
+				Vertex targetA = edgeA.a.equals(p)?edgeA.b:edgeA.a;
+				Vertex targetB = edgeB.a.equals(p)?edgeB.b:edgeB.a;
+				double angle = Math.abs(
+						Math.toDegrees(
+								Math.atan2(targetB.y-p.y, targetB.x-p.x) - Math.atan2(targetA.y-p.y, targetA.x-p.x)
+								)
+						);
+				
+				if (angle < 90 || (angle > 360 && angle < 450)) {
+					return new Pair<>(edgeA.length>edgeB.length?edgeB:edgeA, p);
+				}
+				
+			}
+		}
+		*/
 		return null;
 	}
 	
@@ -307,7 +364,9 @@ public class Main {
 					    	type.contains("«¿√À”ÿ ¿") ||
 					    	type.contains("«¿ƒ¬»∆ ¿") ||
 					    	type.contains("— «¿√À”ÿ Œ…");
-					    	
+			
+			p.betweenSectorBlock = type.contains("Ã≈∆—≈ “Œ–Õ€… –¿—’ŒƒŒÃ≈–");
+			
 			p.pumpStationEntry = type.contains("“Œ◊ ¿ ¬’Œƒ¿ Õ¿ œÕ—");
 			p.pumpStationExit = type.contains("“Œ◊ ¿ ¬€’Œƒ¿ — œÕ—");
 		}

@@ -12,7 +12,13 @@ public class Vertex {
 	public boolean pumpStationExit = false;
 	public boolean canBeLocked = false;
 	public boolean locked = false;
+	public boolean betweenSectorBlock = false;
 	public String type = null;
+	
+	public boolean colored = false;
+	public float r = -1;
+	public float g = -1;
+	public float b = -1;
 	
 	
 	public Vertex(int id) {

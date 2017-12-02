@@ -9,6 +9,7 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import org.jgrapht.WeightedGraph;
 import org.jgrapht.graph.DefaultDirectedWeightedGraph;
 import org.jgrapht.graph.DefaultWeightedEdge;
 
@@ -22,7 +23,7 @@ import bachelorThesisPlayground.Vertex;
 import io.github.jdiemke.triangulation.Triangle2D;
 
 public class NetworkVisualizer extends Visualizer{
-	protected DefaultDirectedWeightedGraph<Vertex, Edge> graph;
+	protected WeightedGraph<Vertex, Edge> graph;
 	protected int width = 1000;
 	protected int height = 0;
 	protected double maxX = 0;
@@ -34,7 +35,7 @@ public class NetworkVisualizer extends Visualizer{
 		return this;
 	}
 	
-	public NetworkVisualizer setData(DefaultDirectedWeightedGraph<Vertex, Edge> graph){
+	public NetworkVisualizer setData(WeightedGraph<Vertex, Edge> graph){
 		this.graph = graph;	
 		dataSet = true;
 		return this;
@@ -58,8 +59,17 @@ public class NetworkVisualizer extends Visualizer{
 		for (Edge e : graph.edgeSet()) {
 			gl2.glLineWidth((float)DisplayMode.getStrokeWidth());
 		    gl2.glBegin( GL2.GL_LINES );   
-	    	drawColoredPoint(gl2, e.a, 0, 1, 1);   
-	    	drawColoredPoint(gl2, e.b, 1, 0, 1);
+		    if (!e.a.colored) {
+		    	drawColoredPoint(gl2, e.a, 0, 1, 1);   		    	
+		    } else {
+		    	drawColoredPoint(gl2, e.a, e.a.r, e.a.g, e.a.b); 
+		    }
+		    if (!e.b.colored) {
+		    	drawColoredPoint(gl2, e.b, 1, 0, 1); 		    	
+		    } else {
+		    	drawColoredPoint(gl2, e.b, e.b.r, e.b.g, e.b.b); 
+		    }
+	    	
 		      
 		    gl2.glEnd(); 
 		}
@@ -77,6 +87,14 @@ public class NetworkVisualizer extends Visualizer{
 		for (Vertex v : graph.vertexSet()) {
 			if(v.pumpStationExit)
 				drawColoredPoint(gl2, v, 0f, 1f, 0f);
+		}		
+		gl2.glEnd();
+		
+		gl2.glPointSize((float)DisplayMode.getBigPointSize()*3f);
+		gl2.glBegin(GL.GL_POINTS);        	
+		for (Vertex v : graph.vertexSet()) {
+			if(v.betweenSectorBlock)
+				drawColoredPoint(gl2, v, 1f, 0f, 0.5f);
 		}		
 		gl2.glEnd();
 		
