@@ -1,5 +1,6 @@
 package bachelorThesisPlayground;
 
+import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.educationalProject.surfacePathfinder.visualization.DisplayMode;
 import org.educationalProject.surfacePathfinder.visualization.NetworkVisualizer;
@@ -176,7 +178,7 @@ public class Main {
 			
 			System.out.println(graph.vertexSet().size());
 			
-			double edgeDeletingThreshold = 8;
+			double edgeDeletingThreshold = 20;//8;
 			
 			Pair<Edge, Vertex> edgeAndPointToDelete = findEdgeAndPointToDelete(graph, edgeDeletingThreshold);
 			while (edgeAndPointToDelete != null){
@@ -216,27 +218,58 @@ public class Main {
 
 			System.out.println(graph.vertexSet().size());
 			
-			Queue<Vertex> queue = new LinkedList<Vertex>();
-			Set<Vertex> visited = new HashSet<>();
-			Vertex root = graph.vertexSet().stream().filter(p->p.oldId==106664401).findFirst().get();
-			queue.add(root);
-			visited.add(root);
-			while(!queue.isEmpty()) {
-				Vertex node = queue.remove();
-				Iterator<Edge> it = graph.edgesOf(node).iterator();
-				while (it.hasNext()) {
-					Edge e = it.next();
-					Vertex child = e.a.equals(node)?e.b:e.a;
-					if (!visited.contains(child) && !child.locked && !child.betweenSectorBlock) {
-						queue.add(child);
-						visited.add(child);		
-						child.colored = true;
-						child.r = 1;
-						child.g = 0;
-						child.b = 0;
+			List<Vertex> pumpStations = graph.vertexSet()
+					.stream()
+					.filter(p->p.pumpStationExit)
+					.collect(Collectors.toList());
+			
+			List<Color> colors = Arrays.asList(
+					Color.MAGENTA,
+					Color.BLUE,
+					Color.DARK_GRAY,
+					Color.RED,
+					Color.YELLOW,
+					Color.CYAN,
+					Color.GREEN,
+					Color.LIGHT_GRAY,
+					Color.ORANGE,
+					Color.PINK
+					);
+			
+			for (int i = 0; i < pumpStations.size(); i++) {			
+				Queue<Vertex> queue = new LinkedList<Vertex>();
+				Set<Vertex> visited = new HashSet<>();
+				//Vertex root = graph.vertexSet().stream().filter(p->p.oldId==106781901).findFirst().get();
+				Vertex root = pumpStations.get(i);
+				queue.add(root);
+				visited.add(root);
+				while(!queue.isEmpty()) {
+					Vertex node = queue.remove();
+					Iterator<Edge> it = graph.edgesOf(node).iterator();
+					while (it.hasNext()) {
+						Edge e = it.next();
+						Vertex child = e.a.equals(node)?e.b:e.a;
+						if (!visited.contains(child) && !child.locked && !child.betweenSectorBlock) {
+							queue.add(child);
+							visited.add(child);		
+							child.colored = true;
+							if (i < colors.size()) {
+								child.r = (float) (colors.get(i).getRed()/256.0);
+								child.g = (float) (colors.get(i).getGreen()/256.0);
+								child.b = (float) (colors.get(i).getBlue()/256.0);
+							} else if (i < colors.size()* 2) {
+								child.r = (float) (colors.get(i - colors.size()).getRed()/2/256.0);
+								child.g = (float) (colors.get(i - colors.size()).getGreen()/2/256.0);
+								child.b = (float) (colors.get(i - colors.size()).getBlue()/2/256.0);								
+							} else {
+								child.r = (float) (colors.get(i - colors.size()*2).getRed()/3/256.0);
+								child.g = (float) (colors.get(i - colors.size()*2).getGreen()/3/256.0);
+								child.b = (float) (colors.get(i - colors.size()*2).getBlue()/3/256.0);								
+							}
+						}
 					}
-				}
-			}			
+				}	
+			}
 			//display 
 				
 			//save as png file
