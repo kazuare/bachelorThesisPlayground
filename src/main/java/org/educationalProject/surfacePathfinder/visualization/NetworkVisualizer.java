@@ -133,7 +133,7 @@ public class NetworkVisualizer extends Visualizer{
 					continue;
 				
 			    gl2.glPushMatrix(); 
-			    gl2.glTranslated(normalizeX(v.x), normalizeY(v.y), 0.0); 
+			    gl2.glTranslated((int)normalizeX(v.x), (int)normalizeY(v.y), 0.0); 
 				textRenderer.draw(""+v.oldId, 0, 0);
 			    textRenderer.flush(); 
 			    gl2.glPopMatrix(); 

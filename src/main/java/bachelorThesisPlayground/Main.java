@@ -130,6 +130,12 @@ public class Main {
 			//update valve statuses
 			CSVGraphReader.updateStatusOfValves(points, "C:\\Users\\test\\Desktop\\диплом\\положения_кранов.csv");
 			
+			points.stream()
+				.filter(x->x.oldId==185933001)
+				.findFirst()
+				.get()
+				.pumpStationExit = true;
+			
 			//now we want to normalize points coordinates (normalization can be ruined after layouting)
 			double minX = points.stream().mapToDouble(p->p.x).min().getAsDouble();
 			double minY = points.stream().mapToDouble(p->p.y).min().getAsDouble();
@@ -246,7 +252,7 @@ public class Main {
 			for (List<Vertex> set : pumpExitAssignments.values()) {
 				for (Vertex v1: set) {
 					for (Vertex v2: set) {
-						if (v1 != v2 && v1.distance(v2) < 40) {
+						if (v1 != v2 && v1.distance(v2) < 300) {
 							UndirectedGraph<Vertex, DefaultEdge> graphToJoin = componentsToJoin.stream()
 								.filter(g->g.containsVertex(v1)||g.containsVertex(v2))
 								.findFirst()
@@ -276,7 +282,7 @@ public class Main {
 				for(int i = 1; i < list.size(); i++) {
 					Vertex v2 = list.get(i); 
 					v2.pumpStationExit = false;
-					if (graph.containsEdge(v1, v2)) {
+					if (!graph.containsEdge(v1, v2)) {
 						Edge e = new Edge(-i, v1.id, v2.id);
 						e.a = v1;
 						e.b = v2;

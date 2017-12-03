@@ -52,6 +52,7 @@ public class Vertex {
 	public String toString() {
 		return new StringJoiner(", ","[","]")
 				.add(""+id)
+				.add(""+oldId)
 				.add(""+x)
 				.add(""+y)
 				.toString();
