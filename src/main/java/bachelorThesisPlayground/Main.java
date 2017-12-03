@@ -24,9 +24,12 @@ import org.educationalProject.surfacePathfinder.visualization.DisplayMode;
 import org.educationalProject.surfacePathfinder.visualization.NetworkVisualizer;
 import org.educationalProject.surfacePathfinder.visualization.Screenshooter;
 import org.educationalProject.surfacePathfinder.visualization.SwingWindow;
+import org.jgrapht.UndirectedGraph;
 import org.jgrapht.WeightedGraph;
 import org.jgrapht.alg.util.Pair;
 import org.jgrapht.graph.DefaultDirectedWeightedGraph;
+import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.SimpleGraph;
 import org.jgrapht.graph.SimpleWeightedGraph;
 
 import bachelorThesisPlayground.normalizers.ConvergenceImprover;
@@ -144,10 +147,10 @@ public class Main {
 			//System.out.println(points.stream().max((a,b)->Double.compare(a.x, b.x)).get());
 			//System.out.println(points.stream().max((a,b)->Double.compare(a.y, b.y)).get());
 			
-			double lowX = 5000;
-			double lowY = 4950;
-			double highX = 5500;
-			double highY = 5450;
+			double lowX = 0;
+			double lowY = 0;
+			double highX = 7500;
+			double highY = 7500;
 			
 			
 			HashMap<Integer, Vertex> idToVertex = new HashMap<Integer, Vertex>(points.size());
@@ -177,7 +180,7 @@ public class Main {
 			}
 			
 			System.out.println(graph.vertexSet().size());
-/*
+
 			double edgeDeletingThreshold = 20;//8;
 			
 			Pair<Edge, Vertex> edgeAndPointToDelete = findEdgeAndPointToDelete(graph, edgeDeletingThreshold);
@@ -203,9 +206,7 @@ public class Main {
 						edgeToChangeCopy.b = pointToSave;						
 					}	
 					
-					if (!graph.containsEdge(edgeToChangeCopy.a, edgeToChangeCopy.b)
-							&&
-						!graph.containsEdge(edgeToChangeCopy.b, edgeToChangeCopy.a)) {
+					if (!graph.containsEdge(edgeToChangeCopy.a, edgeToChangeCopy.b)) {
 						edgeToChangeCopy.length = edgeToChangeCopy.a.distance(edgeToChangeCopy.b);
 						if(edgeToChangeCopy.a != edgeToChangeCopy.b){
 							graph.addEdge(edgeToChangeCopy.a, edgeToChangeCopy.b, edgeToChangeCopy);
@@ -215,63 +216,111 @@ public class Main {
 							
 				edgeAndPointToDelete = findEdgeAndPointToDelete(graph, edgeDeletingThreshold);
 			}
-*/
+
 			System.out.println(graph.vertexSet().size());
 			
 			List<Vertex> pumpStations = graph.vertexSet()
 					.stream()
 					.filter(p->p.pumpStationExit)
 					.collect(Collectors.toList());
+									
+			colorizeGraph(graph, pumpStations);
 			
-			List<Color> colors = Arrays.asList(
-					Color.MAGENTA,
-					Color.BLUE,
-					Color.DARK_GRAY,
-					Color.RED,
-					Color.YELLOW,
-					Color.CYAN,
-					Color.GREEN,
-					Color.LIGHT_GRAY,
-					Color.ORANGE,
-					Color.PINK
-					);
+			Map<Color, List<Vertex>> pumpExitAssignments = new HashMap<>();			
+			for (Vertex p : pumpStations) {
+				Color key = new Color(p.r, p.g, p.b);
+				if (!pumpExitAssignments.containsKey(key)) {
+					pumpExitAssignments.put(key, new ArrayList<Vertex>());
+				} 
+				pumpExitAssignments.get(key).add(p);
+			}
 			
-			for (int i = 0; i < pumpStations.size(); i++) {			
-				Queue<Vertex> queue = new LinkedList<Vertex>();
-				Set<Vertex> visited = new HashSet<>();
-				//Vertex root = graph.vertexSet().stream().filter(p->p.oldId==106781901).findFirst().get();
-				Vertex root = pumpStations.get(i);
-				queue.add(root);
-				visited.add(root);
-				while(!queue.isEmpty()) {
-					Vertex node = queue.remove();
-					Iterator<Edge> it = graph.edgesOf(node).iterator();
-					while (it.hasNext()) {
-						Edge e = it.next();
-						Vertex child = e.a.equals(node)?e.b:e.a;
-						if (!visited.contains(child) && !child.locked && !child.betweenSectorBlock) {
-							queue.add(child);
-							visited.add(child);		
-							child.colored = true;
-							if (i < colors.size()) {
-								child.r = (float) (colors.get(i).getRed()/256.0);
-								child.g = (float) (colors.get(i).getGreen()/256.0);
-								child.b = (float) (colors.get(i).getBlue()/256.0);
-							} else if (i < colors.size()* 2) {
-								child.r = (float) (colors.get(i - colors.size()).getRed()/2/256.0);
-								child.g = (float) (colors.get(i - colors.size()).getGreen()/2/256.0);
-								child.b = (float) (colors.get(i - colors.size()).getBlue()/2/256.0);								
-							} else {
-								child.r = (float) (colors.get(i - colors.size()*2).getRed()/3/256.0);
-								child.g = (float) (colors.get(i - colors.size()*2).getGreen()/3/256.0);
-								child.b = (float) (colors.get(i - colors.size()*2).getBlue()/3/256.0);								
+			for (Color key: pumpExitAssignments.keySet()) {
+				List<Vertex> res = pumpExitAssignments.get(key);
+				Collections.sort(res, (a,b)->Integer.compare(a.oldId, b.oldId));
+				System.out.println(key + " " + res);
+			}
+			System.out.println("====");
+
+			Set<UndirectedGraph<Vertex, DefaultEdge>> componentsToJoin = new HashSet<>();
+			for (List<Vertex> set : pumpExitAssignments.values()) {
+				for (Vertex v1: set) {
+					for (Vertex v2: set) {
+						if (v1 != v2 && v1.distance(v2) < 40) {
+							UndirectedGraph<Vertex, DefaultEdge> graphToJoin = componentsToJoin.stream()
+								.filter(g->g.containsVertex(v1)||g.containsVertex(v2))
+								.findFirst()
+								.orElse(null);
+							if (graphToJoin == null) {
+								graphToJoin = new SimpleGraph<>(DefaultEdge.class);
+								componentsToJoin.add(graphToJoin);
 							}
+							
+							if (!graphToJoin.containsEdge(v1, v2)) {
+								graphToJoin.addVertex(v1);
+								graphToJoin.addVertex(v2);
+								graphToJoin.addEdge(v1, v2);
+							}
+							
 						}
 					}
-				}	
+				}
 			}
+			
+			List<ArrayList<Vertex>> listsToJoin = componentsToJoin.stream()
+					.map(g->new ArrayList<>(g.vertexSet()))
+					.collect(Collectors.toList());
+			
+			for (ArrayList<Vertex> list : listsToJoin) {
+				Vertex v1 = list.get(0);
+				for(int i = 1; i < list.size(); i++) {
+					Vertex v2 = list.get(i); 
+					v2.pumpStationExit = false;
+					if (graph.containsEdge(v1, v2)) {
+						Edge e = new Edge(-i, v1.id, v2.id);
+						e.a = v1;
+						e.b = v2;
+						e.length = v1.distance(v2);
+						e.material = "UTILITY";
+						e.diameter = 10;
+						graph.addEdge(v1, v2, e);
+					}
+				}
+			}
+			
+			
+			for (Vertex p: graph.vertexSet()) {
+				p.colored = false;
+				p.r = -1;
+				p.g = -1;
+				p.b = -1;
+			}
+			
+			colorizeGraph(graph, pumpStations);
+			
+			pumpStations = graph.vertexSet()
+					.stream()
+					.filter(p->p.pumpStationExit)
+					.collect(Collectors.toList());
+			
+			pumpExitAssignments = new HashMap<>();			
+			for (Vertex p : pumpStations) {
+				Color key = new Color(p.r, p.g, p.b);
+				if (!pumpExitAssignments.containsKey(key)) {
+					pumpExitAssignments.put(key, new ArrayList<Vertex>());
+				} 
+				pumpExitAssignments.get(key).add(p);
+			}
+			
+			for (Color key: pumpExitAssignments.keySet()) {
+				List<Vertex> res = pumpExitAssignments.get(key);
+				Collections.sort(res, (a,b)->Integer.compare(a.oldId, b.oldId));
+				System.out.println(key + " " + res);
+			}
+			
 			//display 
 				
+			
 			//save as png file
 			DisplayMode.setMode("screenshot");
 				
@@ -301,14 +350,74 @@ public class Main {
 						
 	}
 	
+	public static void colorizeGraph(UndirectedGraph<Vertex, Edge> graph, List<Vertex> pumpStations) {
+		for (int i = 0; i < pumpStations.size(); i++) {			
+			Queue<Vertex> queue = new LinkedList<Vertex>();
+			Set<Vertex> visited = new HashSet<>();
+			//Vertex root = graph.vertexSet().stream().filter(p->p.oldId==106781901).findFirst().get();
+			Vertex root = pumpStations.get(i);
+			queue.add(root);
+			visited.add(root);
+			colorize(root, i);
+			while(!queue.isEmpty()) {
+				Vertex node = queue.remove();
+				Iterator<Edge> it = graph.edgesOf(node).iterator();
+				while (it.hasNext()) {
+					Edge e = it.next();
+					Vertex child = e.a.equals(node)?e.b:e.a;
+					if (!visited.contains(child) && !child.locked && !child.betweenSectorBlock) {
+						queue.add(child);
+						visited.add(child);	
+						colorize(child, i);
+					}
+				}
+			}	
+		}
+	}
+	
+	public static void colorize(Vertex node, int i) {
+		List<Color> colors = Arrays.asList(
+				Color.MAGENTA,
+				Color.BLUE,
+				Color.DARK_GRAY,
+				Color.RED,
+				Color.YELLOW,
+				Color.CYAN,
+				Color.GREEN,
+				Color.LIGHT_GRAY,
+				Color.ORANGE,
+				Color.PINK
+				);
+		
+		node.colored = true;
+		if (i < colors.size()) {
+			node.r = (float) (colors.get(i).getRed()/256.0);
+			node.g = (float) (colors.get(i).getGreen()/256.0);
+			node.b = (float) (colors.get(i).getBlue()/256.0);
+		} else if (i < colors.size()* 2) {
+			node.r = (float) (colors.get(i - colors.size()).getRed()/2/256.0);
+			node.g = (float) (colors.get(i - colors.size()).getGreen()/2/256.0);
+			node.b = (float) (colors.get(i - colors.size()).getBlue()/2/256.0);								
+		} else {
+			node.r = (float) (colors.get(i - colors.size()*2).getRed()/3/256.0);
+			node.g = (float) (colors.get(i - colors.size()*2).getGreen()/3/256.0);
+			node.b = (float) (colors.get(i - colors.size()*2).getBlue()/3/256.0);								
+		}
+	}
+	
 	public static Pair<Edge, Vertex> findEdgeAndPointToDelete(WeightedGraph<Vertex,Edge> graph, double edgeDeletingThreshold) {
 		Iterator<Edge> edgeIterator = graph.edgeSet().iterator();
 		
 		while (edgeIterator.hasNext()) {
 			Edge e = edgeIterator.next();
 			if (e.length < edgeDeletingThreshold) {
-				boolean aCannotBeDeleted = e.a.fixed || graph.edgesOf(e.a).size() == 1 || e.a.pumpStationEntry || e.a.pumpStationExit || e.a.locked || e.a.betweenSectorBlock;
-				boolean bCannotBeDeleted = e.b.fixed || graph.edgesOf(e.b).size() == 1 || e.b.pumpStationEntry || e.b.pumpStationExit || e.b.locked || e.b.betweenSectorBlock;				
+				//avoiding lock transfer
+				if (e.a.locked || e.b.locked ) {
+					continue;
+				}
+				
+				boolean aCannotBeDeleted = e.a.fixed || graph.edgesOf(e.a).size() == 1 || e.a.pumpStationEntry || e.a.pumpStationExit || e.a.betweenSectorBlock;
+				boolean bCannotBeDeleted = e.b.fixed || graph.edgesOf(e.b).size() == 1 || e.b.pumpStationEntry || e.b.pumpStationExit || e.b.betweenSectorBlock;				
 				
 				Vertex pointToDelete;
 				if (aCannotBeDeleted && bCannotBeDeleted) {
@@ -446,6 +555,15 @@ public class Main {
 			}
 			*/	
 		}
+	}
+	
+	public static class MutableVertexPair{
+	    Vertex first;
+	    Vertex second;
+	    public MutableVertexPair(Vertex a, Vertex b){
+	        this.first = a;
+	        this.second = b;
+	    }		
 	}
 }
 
