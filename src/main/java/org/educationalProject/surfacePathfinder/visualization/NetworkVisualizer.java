@@ -98,6 +98,14 @@ public class NetworkVisualizer extends Visualizer{
 		}		
 		gl2.glEnd();
 		
+		gl2.glPointSize((float)DisplayMode.getBigPointSize()*3f);
+		gl2.glBegin(GL.GL_POINTS);        	
+		for (Vertex v : graph.vertexSet()) {
+			if(v.southernPumpStation)
+				drawColoredPoint(gl2, v, 0.5f, 0.5f, 0.5f);
+		}		
+		gl2.glEnd();
+		
 		gl2.glPointSize((float)DisplayMode.getBigPointSize()*1.5f);
 		gl2.glBegin(GL.GL_POINTS);        	
 		for (Vertex v : graph.vertexSet()) {

@@ -136,6 +136,16 @@ public class Main {
 				.get()
 				.pumpStationExit = true;
 			
+			List<Integer> southernPumpStationNodes = Arrays.asList(new Integer[]{
+				232987201,105053001,105054101,105056301,105054801,
+				105054801,233387601,233387601,104907401,104907401,
+				233122001,233417501,145360101,145361101,145361301 
+			});
+			
+			points.stream()
+			.filter(x->southernPumpStationNodes.contains(x.oldId))
+			.forEach(x->x.southernPumpStation = true);
+			
 			//now we want to normalize points coordinates (normalization can be ruined after layouting)
 			double minX = points.stream().mapToDouble(p->p.x).min().getAsDouble();
 			double minY = points.stream().mapToDouble(p->p.y).min().getAsDouble();
@@ -422,8 +432,8 @@ public class Main {
 					continue;
 				}
 				
-				boolean aCannotBeDeleted = e.a.fixed || graph.edgesOf(e.a).size() == 1 || e.a.pumpStationEntry || e.a.pumpStationExit || e.a.betweenSectorBlock;
-				boolean bCannotBeDeleted = e.b.fixed || graph.edgesOf(e.b).size() == 1 || e.b.pumpStationEntry || e.b.pumpStationExit || e.b.betweenSectorBlock;				
+				boolean aCannotBeDeleted = e.a.fixed || graph.edgesOf(e.a).size() == 1 || e.a.pumpStationEntry || e.a.pumpStationExit || e.a.betweenSectorBlock || e.a.southernPumpStation;
+				boolean bCannotBeDeleted = e.b.fixed || graph.edgesOf(e.b).size() == 1 || e.b.pumpStationEntry || e.b.pumpStationExit || e.b.betweenSectorBlock || e.b.southernPumpStation;				
 				
 				Vertex pointToDelete;
 				if (aCannotBeDeleted && bCannotBeDeleted) {

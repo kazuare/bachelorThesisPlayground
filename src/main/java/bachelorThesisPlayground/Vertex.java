@@ -8,6 +8,7 @@ public class Vertex {
 	public double x = -1;
 	public double y = -1;
 	public boolean fixed = false;
+	public boolean southernPumpStation = false;
 	public boolean pumpStationEntry = false;
 	public boolean pumpStationExit = false;
 	public boolean canBeLocked = false;
