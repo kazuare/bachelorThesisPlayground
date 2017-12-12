@@ -136,8 +136,7 @@ public class NetworkVisualizer extends Visualizer{
 			textRenderer.setColor(Color.BLACK);
 
 			for (Vertex v : graph.vertexSet()) {
-				if (!v.pumpStationExit)
-				//if (!v.fixed && !v.pumpStationEntry && !v.pumpStationExit)
+				if (!v.pumpStationExit && !v.betweenSectorBlock)
 					continue;
 				
 			    gl2.glPushMatrix(); 

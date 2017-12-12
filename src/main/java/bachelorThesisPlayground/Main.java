@@ -136,6 +136,14 @@ public class Main {
 				.get()
 				.pumpStationExit = true;
 			
+			points.stream()
+			.filter(x->x.oldId==104773801 || x.oldId==104771001	)
+			.forEach(x->{
+				x.locked = true; 
+				x.canBeLocked = true;
+			}); 
+			
+			
 			List<Integer> southernPumpStationNodes = Arrays.asList(new Integer[]{
 				232987201,105053001,105054101,105056301,105054801,
 				105054801,233387601,233387601,104907401,104907401,
@@ -163,10 +171,10 @@ public class Main {
 			//System.out.println(points.stream().max((a,b)->Double.compare(a.x, b.x)).get());
 			//System.out.println(points.stream().max((a,b)->Double.compare(a.y, b.y)).get());
 			
-			double lowX = 0;
+			double lowX = 6000;
 			double lowY = 0;
-			double highX = 7500;
-			double highY = 7500;
+			double highX = 11000;
+			double highY = 5000;
 			
 			
 			HashMap<Integer, Vertex> idToVertex = new HashMap<Integer, Vertex>(points.size());
@@ -242,6 +250,28 @@ public class Main {
 									
 			colorizeGraph(graph, pumpStations);
 			
+			removeComponentWithPumpExit(graph, 145146201);		
+			removeComponentWithPumpExit(graph, 106781801);	
+			removeComponentWithPumpExit(graph, 106768001);
+			removeComponentWithPumpExit(graph, 105666301);
+			removeComponentWithPumpExit(graph, 107002701);
+			removeComponentWithPumpExit(graph, 106843801);
+			removeComponentWithPumpExit(graph, 204129801);
+			
+			for (Vertex p: graph.vertexSet()) {
+				p.colored = false;
+				p.r = -1;
+				p.g = -1;
+				p.b = -1;
+			}
+			
+			pumpStations = graph.vertexSet()
+					.stream()
+					.filter(p->p.pumpStationExit)
+					.collect(Collectors.toList());
+			
+			colorizeGraph(graph, pumpStations);
+			
 			Map<Color, List<Vertex>> pumpExitAssignments = new HashMap<>();			
 			for (Vertex p : pumpStations) {
 				Color key = new Color(p.r, p.g, p.b);
@@ -292,6 +322,7 @@ public class Main {
 				for(int i = 1; i < list.size(); i++) {
 					Vertex v2 = list.get(i); 
 					v2.pumpStationExit = false;
+					v2.southernPumpStation = false;
 					if (!graph.containsEdge(v1, v2)) {
 						Edge e = new Edge(-i, v1.id, v2.id);
 						e.a = v1;
@@ -364,6 +395,52 @@ public class Main {
 					.calculateWeightAndHeight();
 			SwingWindow.start(vis, vis.getWidth() + 50, vis.getHeight()+ 50, "pipes");
 						
+	}
+	
+	public static void removeComponentWithPumpExit(SimpleWeightedGraph<Vertex,Edge> graph, int pumpExitId){
+		Vertex pumpExitToDelete= graph.vertexSet().stream()
+				.filter(x->x.oldId==pumpExitId)
+				.findFirst()
+				.get();
+			Color componentToDelete = new Color(pumpExitToDelete.r, pumpExitToDelete.g, pumpExitToDelete.b);
+			
+			boolean modified = false;
+			do {
+				modified = false;
+				
+				Vertex toDelete = null;
+				
+				for (Vertex p : graph.vertexSet()) {
+					boolean cannotBeDeleted = p.pumpStationEntry || p.pumpStationExit || p.betweenSectorBlock || p.southernPumpStation || p.locked;	
+					if(!p.colored && !cannotBeDeleted || p.r==pumpExitToDelete.r && p.g==pumpExitToDelete.g && p.b==pumpExitToDelete.b) {
+						toDelete = p;
+						break;
+					}
+				}
+				
+				if (toDelete != null) {
+					modified = true;
+					graph.removeVertex(toDelete);
+				}
+			} while (modified);
+			
+			do {
+				modified = false;
+				
+				Vertex toDelete = null;
+				
+				for (Vertex p : graph.vertexSet()) {	
+					if(graph.edgesOf(p).size() == 0) {
+						toDelete = p;
+						break;
+					}
+				}
+				
+				if (toDelete != null) {
+					modified = true;
+					graph.removeVertex(toDelete);
+				}
+			} while (modified);
 	}
 	
 	public static void colorizeGraph(UndirectedGraph<Vertex, Edge> graph, List<Vertex> pumpStations) {
@@ -463,7 +540,8 @@ public class Main {
 				104924601, 104947901, 104956301, 104947201, 104961401, 180683201, 104845101, 104866401, 104881601, 
 				104956901, 189236701, 104864101, 104949001, 104893901, 104865901, 104957301, 104956601, 104958201, 
 				104960101, 203199501, 203199301, 104962101, 104924901, 104865801, 104957501, 104959401, 104959301, 
-				104959501, 104949601, 104948501, 104863401, 104863301
+				104959501, 104949601, 104948501, 104863401, 104863301, 
+				104934701//dublicate pump station exit			
 				});
 		
 		while (edgeIterator.hasNext()) {
