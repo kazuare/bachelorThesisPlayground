@@ -26,26 +26,43 @@ import org.educationalProject.surfacePathfinder.visualization.Screenshooter;
 import org.educationalProject.surfacePathfinder.visualization.SwingWindow;
 import org.jgrapht.UndirectedGraph;
 import org.jgrapht.WeightedGraph;
+import org.jgrapht.alg.CycleDetector;
+import org.jgrapht.alg.interfaces.SpanningTreeAlgorithm.SpanningTree;
+import org.jgrapht.alg.spanning.KruskalMinimumSpanningTree;
+import org.jgrapht.alg.spanning.PrimMinimumSpanningTree;
 import org.jgrapht.alg.util.Pair;
 import org.jgrapht.graph.DefaultDirectedWeightedGraph;
 import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.SimpleDirectedGraph;
 import org.jgrapht.graph.SimpleGraph;
 import org.jgrapht.graph.SimpleWeightedGraph;
 
 import bachelorThesisPlayground.normalizers.ConvergenceImprover;
 import bachelorThesisPlayground.normalizers.Normalizer;
 import bachelorThesisPlayground.readers.CSVGraphReader;
+import bachelorThesisPlayground.readers.DBReader;
 import bachelorThesisPlayground.readers.ExcelGraphReader;
 import bachelorThesisPlayground.readers.JsonGraphReader;
 import bachelorThesisPlayground.writers.JSONWriter;
 
 public class Main {
 
-	public static void main(String[] args) {
+	static DBReader dbReader = new DBReader();
+	public static void main(String[] args) {		
 		//writeJSONGraphForD3();
 		//we do layout in d3 and get FINAL_ALL_POINTS.json
+		dbReader.init();
 		
-		drawGraph();
+		SimpleWeightedGraph<Vertex,Edge> graph = getColoredGraph();
+		
+		List<SimpleWeightedGraph<Vertex,Edge>> components = coloredGraphSplit(graph);
+			
+		List<SimpleWeightedGraph<Vertex,Edge>> spanningTrees = getSpanningTrees(components);
+
+		setSensorsWithPreferredPointCount(spanningTrees, 1000, 300);
+		
+		drawGraph(graph, graphJoin(spanningTrees));
+		//drawGraph(graph, null);
 		
 		//denormalizeCoordsAndWriteIntoFiles();
 	}
@@ -109,7 +126,7 @@ public class Main {
 	}
 	
 	
-	public static void drawGraph(){				
+	public static SimpleWeightedGraph<Vertex,Edge> getColoredGraph(){				
 			ArrayList<Vertex> points = getPoints();
 		
 			//from here we get all needed data about edges
@@ -258,6 +275,9 @@ public class Main {
 			removeComponentWithPumpExit(graph, 106843801);
 			removeComponentWithPumpExit(graph, 204129801);
 			
+			//this one actually can be useful 
+			removeComponentWithPumpExit(graph, 106784601);
+			
 			for (Vertex p: graph.vertexSet()) {
 				p.colored = false;
 				p.r = -1;
@@ -364,37 +384,184 @@ public class Main {
 				Collections.sort(res, (a,b)->Integer.compare(a.oldId, b.oldId));
 				System.out.println(key + " " + res);
 			}
+			return graph;
+					
+	}
+	
+	public static List<SimpleWeightedGraph<Vertex,Edge>> getSpanningTrees(List<SimpleWeightedGraph<Vertex,Edge>> components) {
+		List<SimpleWeightedGraph<Vertex,Edge>> result = new ArrayList<>();
+		for (SimpleWeightedGraph<Vertex,Edge> component : components) {
+			SimpleWeightedGraph<Vertex,Edge> tree = new SimpleWeightedGraph<Vertex,Edge>(Edge.class);
 			
-			//display 
-				
+			Vertex pumpStationExit = component.vertexSet().stream().filter(x->x.pumpStationExit).findFirst().get();
 			
-			//save as png file
-			DisplayMode.setMode("screenshot");
+			tree.addVertex(pumpStationExit);
+			
+			List<Edge> queue = new ArrayList<>();
+			
+			while (true) {
+				queue.clear();
+				for (Edge e : component.edgeSet()) 
+					if (
+						tree.containsVertex(e.a)&&!tree.containsVertex(e.b)
+							||
+						!tree.containsVertex(e.a)&&tree.containsVertex(e.b)
+					)
+						queue.add(e);
 				
-			NetworkVisualizer visScreenshot = new NetworkVisualizer()
-					.setData(graph)
-					.setDefaultWidth(10000)
-					.setLabelDrawing(true)
-					.calculateWeightAndHeight();
-			Screenshooter.start(visScreenshot, visScreenshot.getWidth() + 50, visScreenshot.getHeight()+ 50);
-
-			Path source = FileSystems.getDefault().getPath("c:\\users\\test\\desktop\\yo.png");
-			Path out = FileSystems.getDefault().getPath("yo.png");
-			try {
-			    Files.copy(source, out, StandardCopyOption.REPLACE_EXISTING);
-			} catch (IOException e) {
-			    e.printStackTrace();
+				if(queue.isEmpty())
+					break;
+				
+				Collections.sort(queue, (a,b)->edgeComparatorForSpanningTreeAlg(tree,pumpStationExit,a,b));
+				//Collections.sort(queue, (a,b)->Double.compare(a.length, b.length));
+				
+				tree.addVertex(queue.get(0).a);
+				tree.addVertex(queue.get(0).b);
+				tree.addEdge(queue.get(0).a, queue.get(0).b, queue.get(0));
 			}
+			result.add(tree);
+			System.out.println("spanning tree check: " + (checkSpanningTree(component, tree) ? "probably ok" : "fail"));
+		}
+		return result;
+	}
+	
 
-			//draw on screen
-			DisplayMode.setMode("screen");
+	public static void dfsWithMarking(SimpleWeightedGraph<Vertex,Edge> graph, Vertex currentPoint, Set<Vertex> visited, double minimumPath, double remainingPath) {
+		visited.add(currentPoint);
+	    //System.out.println("Visiting vertex " + currentPoint);
+	    if (remainingPath <= 0 && currentPoint.sensorCanBePlaced) {
+	    	remainingPath = minimumPath;
+	    	currentPoint.mainSensorPlaced = true;
+	    } else {	
+		    for (Edge e : graph.edgesOf(currentPoint)) {
+		    	Vertex p = currentPoint.equals(e.a) ? e.b : e.a;
+		    	if (!visited.contains(p) && remainingPath-e.length <= 0 && !p.sensorCanBePlaced && currentPoint.sensorCanBePlaced){ 
+			    	remainingPath = minimumPath;
+			    	currentPoint.mainSensorPlaced = true;
+			    	break;
+		    	}
+		    }	    	
+	    }	    
+	    
+	    for (Edge e : graph.edgesOf(currentPoint)) {
+	    	Vertex p = currentPoint.equals(e.a) ? e.b : e.a;
+	    	if (!visited.contains(p)){ 
+	    		dfsWithMarking(graph, p, visited, minimumPath,remainingPath-e.length);
+	    	}
+	    }
+	}
+	
+
+	public static void setSensorsWithPreferredPointCount(List<SimpleWeightedGraph<Vertex,Edge>> components, int preferredPointCount, int itCount) {
+		double step = 10000;
+		double currentPosition = step;
+		int pointCount = 0;
+		int i;
+		for (i = 0; i < itCount; i++) {
+			for (SimpleWeightedGraph<Vertex,Edge> component : components)
+				for (Vertex p : component.vertexSet())
+					p.mainSensorPlaced = false;
 			
-			NetworkVisualizer vis = new NetworkVisualizer()
-					.setData(graph)
-					.setDefaultWidth(800)
-					.calculateWeightAndHeight();
-			SwingWindow.start(vis, vis.getWidth() + 50, vis.getHeight()+ 50, "pipes");
-						
+			pointCount = setSensorsWithMinimumPath(components, currentPosition);
+			System.out.println("got " + pointCount + "points ("+ preferredPointCount +" preferred) with " + i + " iterations and length " + currentPosition);	
+			if (pointCount != preferredPointCount) {
+				step /= 2;
+				currentPosition += pointCount>preferredPointCount? step : -step;
+			} else break;
+		}	
+		
+	} 
+	
+	public static int setSensorsWithMinimumPath(List<SimpleWeightedGraph<Vertex,Edge>> components, double minimumPath) {
+		int markedCounter = 0;
+		for (SimpleWeightedGraph<Vertex,Edge> component : components) {
+			Set<Vertex> visited = new HashSet<>(); 
+			Vertex pumpStationExit = component.vertexSet()
+					.stream()
+					.filter(p->p.pumpStationExit)
+					.findFirst()
+					.get();
+			dfsWithMarking(component, pumpStationExit, visited, minimumPath, minimumPath);
+			
+			for (Vertex p : component.vertexSet())
+				if (p.mainSensorPlaced)
+					markedCounter++;
+		}	
+		return markedCounter;
+	} 
+	
+	public static boolean checkSpanningTree(SimpleWeightedGraph<Vertex,Edge> graph, SimpleWeightedGraph<Vertex,Edge> tree){
+		if (!graph.vertexSet().containsAll(tree.vertexSet()) || !tree.vertexSet().containsAll(graph.vertexSet()))
+			return false;
+		
+		
+		PrimMinimumSpanningTree<Vertex,Edge>  alg = new PrimMinimumSpanningTree<Vertex,Edge> (tree);
+		
+		SpanningTree<Edge> algTree = alg.getSpanningTree();
+		
+		if (!algTree.getEdges().containsAll(tree.edgeSet()) || !tree.edgeSet().containsAll(algTree.getEdges()))
+			return false;
+		
+		return true;			
+	}
+	
+	public static int edgeComparatorForSpanningTreeAlg(SimpleWeightedGraph<Vertex,Edge> graph, Vertex pumpStationExit, Edge a, Edge b){
+		double distanceDeltaWeight = 1;
+		double diameterWeight = 0.3;
+		double consumptionWeight = 1;
+		
+		double left = 0;
+		left += getDistanceDelta(graph, a, pumpStationExit) * distanceDeltaWeight;
+		left += a.diameter * diameterWeight;
+		left += Math.max(Math.max(a.a.consumption, a.b.consumption), 0) * consumptionWeight;
+		
+		double right = 0;
+		right += getDistanceDelta(graph, b, pumpStationExit) * distanceDeltaWeight;
+		right += b.diameter * diameterWeight;
+		right += Math.max(Math.max(b.a.consumption, b.b.consumption), 0) * consumptionWeight;
+		
+		return -Double.compare(left, right);
+	}
+	
+	public static double getDistanceDelta(SimpleWeightedGraph<Vertex,Edge> graph, Edge a, Vertex pumpStationExit) {
+		if (graph.containsVertex(a.a)) {
+			return pumpStationExit.distance(a.b) - pumpStationExit.distance(a.a);
+		} else {
+			return pumpStationExit.distance(a.a) - pumpStationExit.distance(a.b);			
+		}
+	}
+	
+	
+	public static void drawGraph(SimpleWeightedGraph<Vertex,Edge> graph, SimpleWeightedGraph<Vertex,Edge> overlayGraph){
+		//save as png file
+
+		DisplayMode.setMode("screenshot");
+			
+		NetworkVisualizer visScreenshot = new NetworkVisualizer()
+				.setData(graph)
+				.setDefaultWidth(10000)
+				.setLabelDrawing(true)
+				.setOverlayData(overlayGraph)
+				.calculateWeightAndHeight();
+		Screenshooter.start(visScreenshot, visScreenshot.getWidth() + 50, visScreenshot.getHeight()+ 50);
+
+		Path source = FileSystems.getDefault().getPath("c:\\users\\test\\desktop\\yo.png");
+		Path out = FileSystems.getDefault().getPath("yo.png");
+		try {
+		    Files.copy(source, out, StandardCopyOption.REPLACE_EXISTING);
+		} catch (IOException e) {
+		    e.printStackTrace();
+		}
+
+		//draw on screen
+		DisplayMode.setMode("screen");
+		
+		NetworkVisualizer vis = new NetworkVisualizer()
+				.setData(graph)
+				.setDefaultWidth(800)
+				.setOverlayData(overlayGraph)
+				.calculateWeightAndHeight();
+		SwingWindow.start(vis, vis.getWidth() + 50, vis.getHeight()+ 50, "pipes");
 	}
 	
 	public static void removeComponentWithPumpExit(SimpleWeightedGraph<Vertex,Edge> graph, int pumpExitId){
@@ -443,6 +610,33 @@ public class Main {
 			} while (modified);
 	}
 	
+	public static SimpleWeightedGraph<Vertex,Edge> graphJoin(List<SimpleWeightedGraph<Vertex,Edge>> graphs) {
+		SimpleWeightedGraph<Vertex,Edge> result = new SimpleWeightedGraph<Vertex,Edge>(Edge.class);
+		for (SimpleWeightedGraph<Vertex,Edge> graph : graphs) {
+			for(Vertex v : graph.vertexSet())
+				result.addVertex(v);
+			for(Edge e : graph.edgeSet())
+				result.addEdge(e.a, e.b, e);
+		}
+		return result;
+	}
+
+	public static List<SimpleWeightedGraph<Vertex,Edge>> coloredGraphSplit(SimpleWeightedGraph<Vertex,Edge> graph) {
+		HashMap<Color, SimpleWeightedGraph<Vertex,Edge>> result = new HashMap<>();			
+		for (Edge e: graph.edgeSet()) {
+			if (e.a.r==e.b.r&&e.a.g==e.b.g&&e.a.b==e.b.b&&e.a.r!=-1) {
+				Color key = new Color(e.a.r, e.a.g, e.a.b);
+				if (!result.containsKey(key)) {
+					result.put(key, new SimpleWeightedGraph<Vertex,Edge>(Edge.class));
+				}
+				result.get(key).addVertex(e.a);
+				result.get(key).addVertex(e.b);
+				result.get(key).addEdge(e.a, e.b, e);				
+			}
+		}
+		return new ArrayList<>(result.values());
+	}
+	
 	public static void colorizeGraph(UndirectedGraph<Vertex, Edge> graph, List<Vertex> pumpStations) {
 		for (int i = 0; i < pumpStations.size(); i++) {			
 			Queue<Vertex> queue = new LinkedList<Vertex>();
@@ -470,13 +664,13 @@ public class Main {
 	
 	public static void colorize(Vertex node, int i) {
 		List<Color> colors = Arrays.asList(
-				Color.MAGENTA,
+				Color.GREEN,
 				Color.BLUE,
 				Color.DARK_GRAY,
 				Color.RED,
 				Color.YELLOW,
 				Color.CYAN,
-				Color.GREEN,
+				Color.MAGENTA,
 				Color.LIGHT_GRAY,
 				Color.ORANGE,
 				Color.PINK
@@ -606,6 +800,16 @@ public class Main {
 			p.pumpStationEntry = type.contains("“Œ◊ ¿ ¬’Œƒ¿ Õ¿ œÕ—");
 			p.pumpStationExit = type.contains("“Œ◊ ¿ ¬€’Œƒ¿ — œÕ—");
 		}
+				
+		CSVGraphReader.populatePlacecodes(points, "C:\\Users\\test\\Desktop\\‰ËÔÎÓÏ\\placecode2vert_id.csv");
+		
+		Map<Integer, Double> consumption = dbReader.readConsumption();
+		for (Vertex p : points) 
+			if (consumption.get(p.placecode)!=null){
+				p.consumption = consumption.get(p.placecode);
+				p.sensorCanBePlaced = true;
+				System.out.println("Vertex " + p + " has consumption level " + p.consumption);
+			}
 		
 		return points;
 	}

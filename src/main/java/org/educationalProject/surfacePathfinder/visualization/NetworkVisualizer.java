@@ -24,6 +24,7 @@ import io.github.jdiemke.triangulation.Triangle2D;
 
 public class NetworkVisualizer extends Visualizer{
 	protected WeightedGraph<Vertex, Edge> graph;
+	protected WeightedGraph<Vertex, Edge> overlayGraph;
 	protected int width = 1000;
 	protected int height = 0;
 	protected double maxX = 0;
@@ -41,6 +42,11 @@ public class NetworkVisualizer extends Visualizer{
 		return this;
 	}
 	
+	public NetworkVisualizer setOverlayData(WeightedGraph<Vertex, Edge> graph){
+		this.overlayGraph = graph;	
+		return this;
+	}
+	
 	public NetworkVisualizer setLabelDrawing(boolean drawLabel){
 		this.drawLabel = drawLabel;
 		return this;
@@ -55,10 +61,10 @@ public class NetworkVisualizer extends Visualizer{
     	drawColoredPoint(gl2, new Vertex(1,0,0), 1, 0, 0);      
 	    gl2.glEnd(); 
 		
-		
+
+		gl2.glLineWidth((float)DisplayMode.getStrokeWidth());
+	    gl2.glBegin( GL2.GL_LINES );   
 		for (Edge e : graph.edgeSet()) {
-			gl2.glLineWidth((float)DisplayMode.getStrokeWidth());
-		    gl2.glBegin( GL2.GL_LINES );   
 		    if (!e.a.colored) {
 		    	drawColoredPoint(gl2, e.a, 0, 1, 1);   		    	
 		    } else {
@@ -71,13 +77,21 @@ public class NetworkVisualizer extends Visualizer{
 		    }
 	    	
 		      
-		    gl2.glEnd(); 
 		}
-		
+	    gl2.glEnd(); 
+		/*
 		gl2.glPointSize((float)DisplayMode.getBigPointSize()*2f);
 		gl2.glBegin(GL.GL_POINTS);        	
 		for (Vertex v : graph.vertexSet()) {
 			if(v.pumpStationEntry)
+				drawColoredPoint(gl2, v, 0f, 0f, 1f);
+		}		
+		gl2.glEnd();
+		*/
+		gl2.glPointSize((float)DisplayMode.getBigPointSize()*2f);
+		gl2.glBegin(GL.GL_POINTS);        	
+		for (Vertex v : graph.vertexSet()) {
+			if(v.mainSensorPlaced)
 				drawColoredPoint(gl2, v, 0f, 0f, 1f);
 		}		
 		gl2.glEnd();
@@ -129,6 +143,16 @@ public class NetworkVisualizer extends Visualizer{
 				drawColoredPoint(gl2, v, 1f, 0.5f, 0f);
 		}		
 		gl2.glEnd();	
+		
+		if (overlayGraph != null) {
+			gl2.glLineWidth((float)DisplayMode.getStrokeWidth());
+		    gl2.glBegin( GL2.GL_LINES );   
+			for (Edge e : overlayGraph.edgeSet()) {
+			    drawColoredPoint(gl2, e.a, 0, 0, 0); 
+			    drawColoredPoint(gl2, e.b, 0, 0, 0);  
+			}
+		    gl2.glEnd(); 
+		}
 		
 		if (drawLabel) {
 			TextRenderer textRenderer = new TextRenderer(new Font("Verdana", Font.BOLD, 12));

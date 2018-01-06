@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import bachelorThesisPlayground.Edge;
@@ -46,6 +47,30 @@ public class CSVGraphReader {
 						" a:" + e.a.id + " " + e.a.x + " " + e.a.y + 
 						" b:" + e.b.id + " " + e.b.x + " " + e.b.y);
 			}
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void populatePlacecodes(List<Vertex> points, String file){
+		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+			String sCurrentLine;
+			
+			Map<Integer,Integer> idToPlacecode = new HashMap<>();
+			
+			while ((sCurrentLine = br.readLine()) != null) {
+				int placecode = Integer.parseInt(sCurrentLine.substring(0, sCurrentLine.indexOf(',')));
+				int id = Integer.parseInt(sCurrentLine.substring(sCurrentLine.indexOf(',') + 1));
+				
+				idToPlacecode.put(id, placecode);
+			}
+			
+			for (Vertex p : points)
+				if (idToPlacecode.containsKey(p.oldId)) {
+					System.out.println("Placecode assignment triggered");
+					p.placecode = idToPlacecode.get(p.oldId);
+				}
 			
 		} catch (IOException e) {
 			e.printStackTrace();
