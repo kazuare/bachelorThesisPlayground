@@ -59,7 +59,7 @@ public class Main {
 			
 		List<SimpleWeightedGraph<Vertex,Edge>> spanningTrees = getSpanningTrees(components);
 
-		setSensorsWithPreferredPointCount(spanningTrees, 1000, 300);
+		setSensorsWithPreferredPointCount(spanningTrees, 550, 300);
 		
 		drawGraph(graph, graphJoin(spanningTrees));
 		//drawGraph(graph, null);
@@ -429,19 +429,20 @@ public class Main {
 	public static void dfsWithMarking(SimpleWeightedGraph<Vertex,Edge> graph, Vertex currentPoint, Set<Vertex> visited, double minimumPath, double remainingPath) {
 		visited.add(currentPoint);
 	    //System.out.println("Visiting vertex " + currentPoint);
-	    if (remainingPath <= 0 && currentPoint.sensorCanBePlaced) {
-	    	remainingPath = minimumPath;
-	    	currentPoint.mainSensorPlaced = true;
-	    } else {	
-		    for (Edge e : graph.edgesOf(currentPoint)) {
-		    	Vertex p = currentPoint.equals(e.a) ? e.b : e.a;
-		    	if (!visited.contains(p) && remainingPath-e.length <= 0 && !p.sensorCanBePlaced && currentPoint.sensorCanBePlaced){ 
-			    	remainingPath = minimumPath;
-			    	currentPoint.mainSensorPlaced = true;
-			    	break;
-		    	}
-		    }	    	
-	    }	    
+		if (currentPoint.sensorCanBePlaced && graph.edgesOf(currentPoint).size() > 1)
+		    if (remainingPath <= 0) {
+		    	remainingPath = minimumPath;
+		    	currentPoint.mainSensorPlaced = true;
+		    } else {	
+			    for (Edge e : graph.edgesOf(currentPoint)) {
+			    	Vertex p = currentPoint.equals(e.a) ? e.b : e.a;
+			    	if (!visited.contains(p) && remainingPath-e.length <= 0 && !p.sensorCanBePlaced){ 
+				    	remainingPath = minimumPath;
+				    	currentPoint.mainSensorPlaced = true;
+				    	break;
+			    	}
+			    }	    	
+		    }	    
 	    
 	    for (Edge e : graph.edgesOf(currentPoint)) {
 	    	Vertex p = currentPoint.equals(e.a) ? e.b : e.a;

@@ -53,6 +53,7 @@ public class NetworkVisualizer extends Visualizer{
 	}
 	
 	protected void drawContent( GL2 gl2 ){
+		System.out.println("drawing start");
 	  	gl2.glColor3f(1f,1f,1f);	
 		gl2.glRectd(0,0,width+50,height+50);
 
@@ -62,6 +63,7 @@ public class NetworkVisualizer extends Visualizer{
 	    gl2.glEnd(); 
 		
 
+		System.out.println("drawing main lines");
 		gl2.glLineWidth((float)DisplayMode.getStrokeWidth());
 	    gl2.glBegin( GL2.GL_LINES );   
 		for (Edge e : graph.edgeSet()) {
@@ -79,6 +81,8 @@ public class NetworkVisualizer extends Visualizer{
 		      
 		}
 	    gl2.glEnd(); 
+
+		System.out.println("drawing points");
 		/*
 		gl2.glPointSize((float)DisplayMode.getBigPointSize()*2f);
 		gl2.glBegin(GL.GL_POINTS);        	
@@ -143,7 +147,8 @@ public class NetworkVisualizer extends Visualizer{
 				drawColoredPoint(gl2, v, 1f, 0.5f, 0f);
 		}		
 		gl2.glEnd();	
-		
+
+		System.out.println("drawing overlay");
 		if (overlayGraph != null) {
 			gl2.glLineWidth((float)DisplayMode.getStrokeWidth());
 		    gl2.glBegin( GL2.GL_LINES );   
@@ -153,7 +158,8 @@ public class NetworkVisualizer extends Visualizer{
 			}
 		    gl2.glEnd(); 
 		}
-		
+
+		System.out.println("drawing labels");
 		if (drawLabel) {
 			TextRenderer textRenderer = new TextRenderer(new Font("Verdana", Font.BOLD, 12));
 			textRenderer.begin3DRendering();
