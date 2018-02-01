@@ -26,6 +26,7 @@ public class Vertex {
 	public float r = -1;
 	public float g = -1;
 	public float b = -1;
+	public int zoneIndex = -1;
 	
 	
 	public Vertex(int id) {

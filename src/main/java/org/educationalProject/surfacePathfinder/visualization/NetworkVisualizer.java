@@ -12,6 +12,7 @@ import javax.imageio.ImageIO;
 import org.jgrapht.WeightedGraph;
 import org.jgrapht.graph.DefaultDirectedWeightedGraph;
 import org.jgrapht.graph.DefaultWeightedEdge;
+import org.jgrapht.graph.SimpleWeightedGraph;
 
 import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.GL;
@@ -30,9 +31,33 @@ public class NetworkVisualizer extends Visualizer{
 	protected double maxX = 0;
 	protected double maxY = 0;	    
 	protected double scaling = 0;
-	protected boolean drawLabel = false;
+	protected boolean drawLabel = true;
+	protected boolean offset = false;
+	protected double offsetX = 0;
+	protected double offsetY = 0;
+	protected Vertex attentionPoint = null;
+	
 	public NetworkVisualizer setDefaultWidth(int width){
 		this.width = width;
+		return this;
+	}
+
+	public NetworkVisualizer setAttentionPoint(Vertex point){
+		this.attentionPoint = point;
+		System.out.println("attention point: " + point);
+		WeightedGraph<Vertex, Edge> truncatedCopy = new SimpleWeightedGraph<>(Edge.class);
+		for (Vertex a : graph.vertexSet()) {
+			if (Math.abs(a.x - point.x) < 500 && Math.abs(a.y - point.y) < 500) {
+				truncatedCopy.addVertex(a);
+			}
+		}
+		for (Edge e : graph.edgeSet()) {
+			if (truncatedCopy.containsVertex(e.a) && truncatedCopy.containsVertex(e.b)) {
+				truncatedCopy.addEdge(e.a, e.b, e);
+			}
+		}
+		graph = truncatedCopy;
+		setOffset(true);
 		return this;
 	}
 	
@@ -135,7 +160,8 @@ public class NetworkVisualizer extends Visualizer{
 		gl2.glPointSize((float)DisplayMode.getBigPointSize());
 		gl2.glBegin(GL.GL_POINTS);        	
 		for (Vertex v : graph.vertexSet()) {
-			if(v.fixed)
+			//if(v.type.toLowerCase().contains("колодец"))
+			if(v.placecode > -1)
 				drawColoredPoint(gl2, v, 0f, 0f, 0f);
 		}		
 		gl2.glEnd();
@@ -160,11 +186,11 @@ public class NetworkVisualizer extends Visualizer{
 		}
 
 		System.out.println("drawing labels");
-		if (drawLabel) {
-			TextRenderer textRenderer = new TextRenderer(new Font("Verdana", Font.BOLD, 12));
-			textRenderer.begin3DRendering();
-			textRenderer.setColor(Color.BLACK);
+		TextRenderer textRenderer = new TextRenderer(new Font("Verdana", Font.BOLD, 12));
+		textRenderer.begin3DRendering();
+		textRenderer.setColor(Color.BLACK);
 
+		if (drawLabel) {
 			for (Vertex v : graph.vertexSet()) {
 				if (!v.pumpStationExit && !v.betweenSectorBlock)
 					continue;
@@ -175,15 +201,32 @@ public class NetworkVisualizer extends Visualizer{
 			    textRenderer.flush(); 
 			    gl2.glPopMatrix(); 
 			}
-			textRenderer.end3DRendering();
 		}
+		
+		if (attentionPoint != null) {
+		    gl2.glPushMatrix(); 
+		    gl2.glTranslated((int)normalizeX(attentionPoint.x), (int)normalizeY(attentionPoint.y), 0.0); 
+			textRenderer.draw(""+attentionPoint.oldId, 0, 0);
+		    textRenderer.flush(); 
+		    gl2.glPopMatrix(); 
+		}
+		
+		textRenderer.end3DRendering();
 		
 	}
 
+	public NetworkVisualizer setOffset(boolean offset){
+		this.offset = offset;
+		if (offset) {
+			offsetX = graph.vertexSet().stream().mapToDouble(p->p.x).min().getAsDouble();
+			offsetY = graph.vertexSet().stream().mapToDouble(p->p.y).min().getAsDouble();
+		}
+	    return this;
+	}
+	
 	public NetworkVisualizer calculateWeightAndHeight(){
-		maxX = graph.vertexSet().stream().mapToDouble(p->p.x).max().getAsDouble();
-	    maxY = graph.vertexSet().stream().mapToDouble(p->p.y).max().getAsDouble();
-	    
+		maxX = graph.vertexSet().stream().mapToDouble(p->p.x-offsetX).max().getAsDouble();
+		maxY = graph.vertexSet().stream().mapToDouble(p->p.y-offsetY).max().getAsDouble();
 	    scaling = width/maxX;
 	    height = (int) (scaling * maxY);
 	    return this;
@@ -210,11 +253,11 @@ public class NetworkVisualizer extends Visualizer{
 	}
 	
 	public double normalizeX(double data){
-		return width*data/maxX; 
+		return width*(data - offsetX)/maxX; 
 	}
 	
 	public double normalizeY(double data){
-		return height*data/maxY; 
+		return height*(data - offsetY)/maxY; 
 	}
 	
 	public void drawPoint(GL2 gl2, Vertex v){
@@ -225,26 +268,4 @@ public class NetworkVisualizer extends Visualizer{
 		gl2.glColor3f(r,g,b);	
 		drawPoint(gl2, v);
 	}
-	/* works incorrectly
-	public void drawRhombus(GL2 gl2, Vertex v, float r, float g, float b){
-		gl2.glColor3f(r,g,b);	
-		double radius = DisplayMode.getPolygonDiameter()/2;
-		gl2.glBegin(GL.GL_LINES);
-		gl2.glVertex2d(normalizeX(v.x+radius), normalizeY(v.y));
-		gl2.glVertex2d(normalizeX(v.x), normalizeY(v.y-radius));
-		gl2.glVertex2d(normalizeX(v.x-radius), normalizeY(v.y));
-		gl2.glVertex2d(normalizeX(v.x), normalizeY(v.y+radius));		
-		gl2.glEnd();	
-	}
-	
-	public void drawTriangle(GL2 gl2, Vertex v, float r, float g, float b){
-		gl2.glColor3f(r,g,b);	
-		double radius = DisplayMode.getPolygonDiameter()/2;
-		gl2.glBegin(GL.GL_LINES);
-		gl2.glVertex2d(normalizeX(v.x), normalizeY(v.y+radius));
-		gl2.glVertex2d(normalizeX(v.x-radius), normalizeY(v.y-radius));
-		gl2.glVertex2d(normalizeX(v.x+radius), normalizeY(v.y-radius));
-		gl2.glEnd();	
-	}
-	*/
 }

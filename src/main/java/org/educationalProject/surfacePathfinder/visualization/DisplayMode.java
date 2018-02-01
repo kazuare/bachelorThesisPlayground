@@ -17,7 +17,7 @@ public class DisplayMode {
 		if("screen".equals(mode)){
 			return 2;
 		} else {
-			return 10;
+			return 12;
 		}
 	}
 	

@@ -3,8 +3,11 @@ package org.educationalProject.surfacePathfinder.visualization;
 import com.jogamp.opengl.GLProfile;
 
 import java.awt.image.BufferedImage;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 import javax.imageio.ImageIO;
 
@@ -47,13 +50,18 @@ public class Screenshooter {
 	            
 			}
         });
+        
+        System.out.println("drawable.display()");
         drawable.display();
 
         //Move drawing code to OffscreenJOGL
-
+        System.out.println("Move drawing code to OffscreenJOGL");
         BufferedImage im = new AWTGLReadBufferUtil(drawable.getGLProfile(), false).readPixelsToBufferedImage(drawable.getGL(), 0, 0, width, height, true /* awtOrientation */);
         try {
-			ImageIO.write(im,"png",new File("C:\\users\\test\\desktop\\yo.png"));
+            System.out.println("Writing");
+            OutputStream stream = new BufferedOutputStream(new FileOutputStream("C:\\users\\test\\desktop\\yo.png"), 100000);
+			ImageIO.write(im,"png", stream);
+			stream.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
