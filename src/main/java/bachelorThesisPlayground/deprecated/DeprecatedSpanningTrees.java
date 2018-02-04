@@ -22,7 +22,7 @@ public class DeprecatedSpanningTrees {
 		for (i = 0; i < itCount; i++) {
 			for (SimpleWeightedGraph<Vertex,Edge> component : components)
 				for (Vertex p : component.vertexSet())
-					p.mainSensorPlaced = false;
+					p.sensorPlaced = false;
 			
 			pointCount = setSensorsWithMinimumPath(components, currentPosition);
 			System.out.println("got " + pointCount + "points ("+ preferredPointCount +" preferred) with " + i + " iterations and length " + currentPosition);	
@@ -46,7 +46,7 @@ public class DeprecatedSpanningTrees {
 			dfsWithMarking(component, pumpStationExit, visited, minimumPath, minimumPath);
 			
 			for (Vertex p : component.vertexSet())
-				if (p.mainSensorPlaced)
+				if (p.sensorPlaced)
 					markedCounter++;
 		}	
 		return markedCounter;
@@ -93,16 +93,16 @@ public class DeprecatedSpanningTrees {
 	public static void dfsWithMarking(SimpleWeightedGraph<Vertex,Edge> graph, Vertex currentPoint, Set<Vertex> visited, double minimumPath, double remainingPath) {
 		visited.add(currentPoint);
 	    //System.out.println("Visiting vertex " + currentPoint);
-		if (currentPoint.sensorCanBePlaced && graph.edgesOf(currentPoint).size() > 1)
+		if (graph.edgesOf(currentPoint).size() > 1)
 		    if (remainingPath <= 0) {
 		    	remainingPath = minimumPath;
-		    	currentPoint.mainSensorPlaced = true;
+		    	currentPoint.sensorPlaced = true;
 		    } else {	
 			    for (Edge e : graph.edgesOf(currentPoint)) {
 			    	Vertex p = currentPoint.equals(e.a) ? e.b : e.a;
-			    	if (!visited.contains(p) && remainingPath-e.length <= 0 && !p.sensorCanBePlaced){ 
+			    	if (!visited.contains(p) && remainingPath-e.length <= 0){ 
 				    	remainingPath = minimumPath;
-				    	currentPoint.mainSensorPlaced = true;
+				    	currentPoint.sensorPlaced = true;
 				    	break;
 			    	}
 			    }	    	

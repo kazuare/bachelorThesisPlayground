@@ -3,6 +3,7 @@ package bachelorThesisPlayground.graphBuilding;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -98,6 +99,7 @@ public class GraphBuilding {
 			double highX = 11000;
 			double highY = 5000;
 			
+			List<Integer> bannedVertices = Arrays.asList(new Integer[]{144833201,144794101,144722801});
 			
 			HashMap<Integer, Vertex> idToVertex = new HashMap<Integer, Vertex>(points.size());
 			for (Vertex p : points){
@@ -108,6 +110,10 @@ public class GraphBuilding {
 						p.x -= lowX;
 						p.y -= lowY;
 					}
+				
+				if( bannedVertices.contains(p.oldId)) 
+					continue;
+				
 				idToVertex.put(p.id, p);
 				graph.addVertex(p);
 			}
@@ -115,19 +121,19 @@ public class GraphBuilding {
 			for (Edge e: edges) {
 				e.a = idToVertex.get(e.a.id);
 				e.b = idToVertex.get(e.b.id);
-				
-				if(filterByCoords && (e.a==null || e.b == null))
+								
+				if((e.a==null || e.b == null))
 					continue;
 				
 				if (e.a != e.b) {
 					graph.addEdge(e.a, e.b, e);
-					System.out.println("filling graph with edge: " + e);
+					//System.out.println("filling graph with edge: " + e);
 				}
 			}
 			
 			System.out.println(graph.vertexSet().size());
 
-			double edgeDeletingThreshold = 1;//8;
+			double edgeDeletingThreshold = 15;//8;
 			
 			Pair<Edge, Vertex> edgeAndPointToDelete = findEdgeAndPointToDelete(graph, edgeDeletingThreshold);
 			while (edgeAndPointToDelete != null){
@@ -339,6 +345,18 @@ public class GraphBuilding {
 				}
 			} while (modified);
 	}
+	
+	public static List<SimpleWeightedGraph<Vertex, Edge>> decolorizeComponents(List<SimpleWeightedGraph<Vertex, Edge>> components) {
+		for (UndirectedGraph<Vertex, Edge> component : components)
+			for (Vertex v : component.vertexSet()) {
+				v.r = -1;
+				v.b = -1; 
+				v.g = -1;
+				v.colored = false;
+			}
+		return components;
+	}
+	
 	public static void colorizeGraph(UndirectedGraph<Vertex, Edge> graph, List<Vertex> pumpStations) {
 		for (int i = 0; i < pumpStations.size(); i++) {			
 			Queue<Vertex> queue = new LinkedList<Vertex>();
@@ -404,8 +422,16 @@ public class GraphBuilding {
 					continue;
 				}
 				
-				boolean aCannotBeDeleted = e.a.fixed || graph.edgesOf(e.a).size() == 1 || e.a.pumpStationEntry || e.a.pumpStationExit || e.a.betweenSectorBlock || e.a.southernPumpStation;
-				boolean bCannotBeDeleted = e.b.fixed || graph.edgesOf(e.b).size() == 1 || e.b.pumpStationEntry || e.b.pumpStationExit || e.b.betweenSectorBlock || e.b.southernPumpStation;				
+				if (e.a.fixed || e.b.fixed ) {
+					continue;
+				}
+				
+				if (e.a.placecode > 0 || e.b.placecode > 0 ) {
+					continue;
+				}
+				
+				boolean aCannotBeDeleted = graph.edgesOf(e.a).size() == 1 || e.a.pumpStationEntry || e.a.pumpStationExit || e.a.betweenSectorBlock || e.a.southernPumpStation;
+				boolean bCannotBeDeleted = graph.edgesOf(e.b).size() == 1 || e.b.pumpStationEntry || e.b.pumpStationExit || e.b.betweenSectorBlock || e.b.southernPumpStation;				
 				
 				Vertex pointToDelete;
 				if (aCannotBeDeleted && bCannotBeDeleted) {
@@ -436,7 +462,7 @@ public class GraphBuilding {
 				104956901, 189236701, 104864101, 104949001, 104893901, 104865901, 104957301, 104956601, 104958201, 
 				104960101, 203199501, 203199301, 104962101, 104924901, 104865801, 104957501, 104959401, 104959301, 
 				104959501, 104949601, 104948501, 104863401, 104863301, 
-				104934701//dublicate pump station exit			
+				104934701//dublicate pump station exit		
 				});
 		
 		while (edgeIterator.hasNext()) {
@@ -480,7 +506,6 @@ public class GraphBuilding {
 		for (Vertex p : points) 
 			if (consumption.get(p.placecode)!=null){
 				p.consumption = consumption.get(p.placecode);
-				p.sensorCanBePlaced = true;
 				System.out.println("Vertex " + p + " has consumption level " + p.consumption);
 			}
 		

@@ -26,7 +26,7 @@ public class DeprecatedKMeans {
 		componentloop: 
 		for (SimpleWeightedGraph<Vertex,Edge> component : components) {
 			for (Vertex p : component.vertexSet())
-				p.mainSensorPlaced = false;	
+				p.sensorPlaced = false;	
 
 			FloydWarshallShortestPaths<Vertex, Edge> alg = new FloydWarshallShortestPaths<>(component);
 
@@ -61,7 +61,7 @@ public class DeprecatedKMeans {
 			}
 			
 			for (Vertex centroid : result)
-				centroid.mainSensorPlaced = true;
+				centroid.sensorPlaced = true;
 		}
 	} 
 	

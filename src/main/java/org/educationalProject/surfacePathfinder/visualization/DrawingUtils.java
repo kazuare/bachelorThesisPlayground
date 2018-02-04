@@ -14,16 +14,16 @@ import bachelorThesisPlayground.Vertex;
 
 public class DrawingUtils {
 
-	public static void saveGraph(SimpleWeightedGraph<Vertex,Edge> graph, SimpleWeightedGraph<Vertex,Edge> overlayGraph){
-		//save as png file
-		DisplayMode.setMode("screenshot");
-			
+	public static void saveGraph(SimpleWeightedGraph<Vertex,Edge> graph, SimpleWeightedGraph<Vertex,Edge> overlayGraph, List<Vertex> pointsToLabel){
+		//save as png file			
 		NetworkVisualizer visScreenshot = new NetworkVisualizer()
+				.setMode("screenshot")
 				.setData(graph)
 				.setDefaultWidth(10000)
-				.setLabelDrawing(true)
 				.setOverlayData(overlayGraph)
+				.setPointsToLabel(pointsToLabel)
 				.setLabelDrawing(false)
+				.setConsumptionDrawing(true)
 				.calculateWeightAndHeight();
 		Screenshooter.start(visScreenshot, visScreenshot.getWidth() + 50, visScreenshot.getHeight()+ 50);
 
@@ -36,14 +36,14 @@ public class DrawingUtils {
 		}
 	}
 	
-	public static void drawGraph(SimpleWeightedGraph<Vertex,Edge> graph, SimpleWeightedGraph<Vertex,Edge> overlayGraph){
+	public static void drawGraph(SimpleWeightedGraph<Vertex,Edge> graph, SimpleWeightedGraph<Vertex,Edge> overlayGraph, List<Vertex> pointsToLabel){
 		//draw on screen
-		DisplayMode.setMode("screen");
-		
 		NetworkVisualizer vis = new NetworkVisualizer()
+				.setMode("screen")
 				.setData(graph)
-				.setDefaultWidth(650)
+				.setDefaultWidth(800)
 				.setOverlayData(overlayGraph)
+				.setPointsToLabel(pointsToLabel)
 				.setOffset(true)
 				.setLabelDrawing(false)
 				.calculateWeightAndHeight();
@@ -52,13 +52,13 @@ public class DrawingUtils {
 	
 	public static void drawGraphWithAttentionPoint(SimpleWeightedGraph<Vertex,Edge> graph, Vertex point){
 		//draw on screen
-		DisplayMode.setMode("screen");
-		
 		NetworkVisualizer vis = new NetworkVisualizer()
+				.setMode("focused screen")
 				.setData(graph)
 				.setDefaultWidth(650)
 				.setAttentionPoint(point)
 				.setLabelDrawing(false)
+				.setConsumptionDrawing(true)
 				.calculateWeightAndHeight();
 		SwingWindow.start(vis, vis.getWidth() + 50, vis.getHeight()+ 50, "pipes");
 	}

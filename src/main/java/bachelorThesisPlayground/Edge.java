@@ -9,6 +9,7 @@ public class Edge {
 	public Vertex b;
 	public String material;
 	public double diameter;
+	public double leak = 0;
 	
 	public Edge(int id) {
 		this.id = id;

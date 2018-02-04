@@ -7,6 +7,8 @@ import java.util.List;
 
 import org.jgrapht.graph.SimpleWeightedGraph;
 
+import bachelorThesisPlayground.graphBuilding.GraphBuilding;
+
 public class Utils {
 
 	public static List<SimpleWeightedGraph<Vertex,Edge>> coloredGraphSplit(SimpleWeightedGraph<Vertex,Edge> graph) {
@@ -23,6 +25,10 @@ public class Utils {
 			}
 		}
 		return new ArrayList<>(result.values());
+	}
+	
+	public static List<SimpleWeightedGraph<Vertex,Edge>> graphSplit(SimpleWeightedGraph<Vertex,Edge> graph) {
+		return GraphBuilding.decolorizeComponents(coloredGraphSplit(graph));
 	}
 	
 	public static class MutableVertexPair{
