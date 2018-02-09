@@ -1,6 +1,7 @@
 package bachelorThesisPlayground;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -44,19 +45,53 @@ public class Main {
 		
 		for(int i = 0; i < 5; i++) {
 			SimpleWeightedGraph<Vertex,Edge> currentComponent = components.get(i);
-			detectCycles(components.get(i));
-			//for(Vertex v : components.get(i).vertexSet())
-			//	recurrentSetWaterConsumptionWithoutCycles(components.get(i), v);		
+			detectCycles(currentComponent);
+			for(Vertex v : currentComponent.vertexSet())
+				recurrentSetWaterConsumptionWithoutCycles(currentComponent, v);	
+			
+			SimpleWeightedGraph<Vertex,Edge> cycle = getUnhandledCycle(currentComponent);
+			while (cycle != null) {
+								
+				cycle = getUnhandledCycle(currentComponent);
+				
+				if (cycle != null){
+					System.out.println("found cycle " + cycle.vertexSet().stream().map(x->x.oldId).collect(Collectors.toList()));
+					
+					resolveCycleConsumption(cycle, currentComponent);					
+				}
+			}
+						
+			while (true) {
+				int pointsWithoutConsumption = countPointsWithoutConsumption(currentComponent.vertexSet());
+
+				currentComponent.vertexSet()
+					.stream()
+					.filter(v->v.consumption == -Double.MAX_VALUE)
+					.forEach(v->recurrentSetWaterConsumption(currentComponent,v));
+				
+				if (pointsWithoutConsumption == countPointsWithoutConsumption(currentComponent.vertexSet())) {
+					break;
+				}
+			}		
+				
 		}
 		
 		DrawingUtils.saveGraph(graph, null, null);
 		DrawingUtils.drawGraph(graph, null, null);
 	}
 	
+	public static int countPointsWithoutConsumption(Collection<Vertex> points){
+		return (int) points
+				.stream()
+				.filter(v->v.consumption == -Double.MAX_VALUE)
+				.count();
+		
+	}
+	
 	public static SimpleWeightedGraph<Vertex,Edge> getUnhandledCycle(SimpleWeightedGraph<Vertex,Edge> graph) {
 		Vertex cycledVertex = graph.vertexSet()
 				.stream()
-				.filter(v->v.inCycle && v.consumption < 0)
+				.filter(v->v.inCycle && v.consumption == -Double.MAX_VALUE)
 				.findAny()
 				.orElse(null);
 		
@@ -69,18 +104,76 @@ public class Main {
 		int size = -Integer.MIN_VALUE;
 		while (size != cycle.edgeSet().size()) {
 			size = cycle.edgeSet().size();
+			List<Edge> toAdd = new ArrayList<>();
 			for (Vertex v : cycle.vertexSet())
 				for (Edge e : graph.edgesOf(v)) {
 					if (!cycle.containsVertex(e.a) && e.a.inCycle
 							|| !cycle.containsVertex(e.b) && e.b.inCycle) {
-						cycle.addVertex(e.a);
-						cycle.addVertex(e.b);
-						cycle.addEdge(e.a, e.b, e);
+						toAdd.add(e);
 					}
 				}
+			for (Edge e : toAdd){
+				cycle.addVertex(e.a);
+				cycle.addVertex(e.b);
+				cycle.addEdge(e.a, e.b, e);
+			}
 		}
 		
 		return cycle;
+	}
+	
+	//only for simple cycles
+	public static void resolveCycleConsumption(SimpleWeightedGraph<Vertex,Edge> cycle, SimpleWeightedGraph<Vertex,Edge> graph){
+		
+		double totalOutcome = 0;
+		int totalIncomeEdges = 0;
+		Vertex traversingStart = null;
+		for (Vertex v : cycle.vertexSet()) {
+			if (traversingStart == null)
+				traversingStart = v;
+			for(Edge e : graph.edgesOf(v)) {
+				if (e.a.equals(v) && !e.b.inCycle) {
+					totalOutcome += e.b.consumption;
+				} else if (e.b.equals(v) && !e.a.inCycle) {
+					totalIncomeEdges++;
+				}
+			}
+		}
+		
+		System.out.println("total incoming edges: " + totalIncomeEdges);
+
+		System.out.println("total outcome: " + totalOutcome);
+		
+		double incomePerEdge = totalOutcome/totalIncomeEdges;
+
+		System.out.println("income per edge: " + incomePerEdge); 
+		
+		Vertex currentNode = traversingStart;
+		currentNode.consumption = totalOutcome;
+		do {
+			Vertex nextNode = null;
+			double innerConsumption = currentNode.consumption;
+			for(Edge e : graph.edgesOf(currentNode)) {
+				if (e.a.equals(currentNode)) {
+					if (!e.b.inCycle) {
+						System.out.println("node " + e.b + " output node with comsumption " + e.b.consumption); 
+						innerConsumption -= e.b.consumption;
+					} else {
+						nextNode = e.b;
+					}
+				} else {
+					if (!e.a.inCycle) {
+						innerConsumption += incomePerEdge;
+						currentNode.consumption += incomePerEdge;
+						System.out.println("node " + e.b + " input node with comsumption " + e.a.consumption); 
+					}
+				}
+			}
+			System.out.println("-- node " + currentNode + " consumption: " + currentNode.consumption); 
+			nextNode.consumption = innerConsumption;
+			currentNode = nextNode;
+		} while (currentNode != traversingStart);
+		
 	}
 	
 	public static void detectCycles(SimpleWeightedGraph<Vertex,Edge> graph){
@@ -135,11 +228,11 @@ public class Main {
 	}
 	
 	public static double recurrentSetWaterConsumption(SimpleWeightedGraph<Vertex,Edge> graph, Vertex start){
-		if (start.consumption < 0) {
+		if (start.consumption == -Double.MAX_VALUE) {
 			double consumption = 0;
 			for (Edge e : graph.edgesOf(start)) 
 				if (e.a.equals(start)) {
-					double childConsumption = recurrentSetWaterConsumptionWithoutCycles(graph, e.b);
+					double childConsumption = recurrentSetWaterConsumption(graph, e.b);
 					consumption += childConsumption;
 				}
 			start.consumption = consumption;
@@ -165,7 +258,6 @@ public class Main {
 		}
 		return start.consumption;		
 	}
-
 	
 	public static Vertex breakSomething(SimpleWeightedGraph<Vertex,Edge> graph) {
 		List<Vertex> points = new ArrayList<>(graph.vertexSet());

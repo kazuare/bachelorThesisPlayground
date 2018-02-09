@@ -5,6 +5,7 @@ import java.awt.Font;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -105,44 +106,56 @@ public class NetworkVisualizer extends Visualizer{
     	drawColoredPoint(gl2, new Vertex(1,0,0), 1, 0, 0);      
 	    gl2.glEnd(); 
 	    
-	    
-	    
-	    // only cycle drawing
+	    //cycle with outputs
 	    /*
+	    List<Vertex> toDraw = new ArrayList<>();
+	    
 	    System.out.println("drawing main lines");
 		gl2.glLineWidth((float)DisplayMode.getStrokeWidth(mode));
 	    gl2.glBegin( GL2.GL_LINES );   
 		for (Edge e : graph.edgeSet()) {
-		    if (e.a.inCycle && e.b.inCycle) {
+		    if (e.a.inCycle) {
 		    	drawColoredPoint(gl2, e.a, 0, 1, 1);  
-		    	drawColoredPoint(gl2, e.b, 1, 0, 1); 	
-		    }		      
+		    	drawColoredPoint(gl2, e.b, 1, 0, 1); 
+		    	
+		    	toDraw.add(e.a);
+		    	toDraw.add(e.b);
+		    } else if (e.b.inCycle) {
+		    	drawColoredPoint(gl2, e.a, 0, 1, 1);  
+		    	drawColoredPoint(gl2, e.b, 1, 0, 1); 
+		    	
+		    	toDraw.add(e.a);
+		    	toDraw.add(e.b);
+		    }	      
 		}
 	    gl2.glEnd();
 	    
 	    gl2.glPointSize((float)DisplayMode.getBigPointSize(mode));
 		gl2.glBegin(GL.GL_POINTS);        	
-		for (Vertex v : graph.vertexSet()) {
-			if(v.inCycle)
-				drawColoredPoint(gl2, v, 0f, 0f, 1f);
+		for (Vertex v : toDraw) {
+			if (!v.inCycle)continue;
+			drawColoredPoint(gl2, v, 0f, 0f, 1f);
 		}		
 		gl2.glEnd();
 	    
-		TextRenderer consumptionRenderer = new TextRenderer(new Font("Verdana", Font.BOLD, 16));
+		TextRenderer consumptionRenderer = new TextRenderer(new Font("Verdana", Font.BOLD, 8));
 		consumptionRenderer.begin3DRendering();
 		consumptionRenderer.setColor(Color.RED);
 		
-		for (Vertex v : graph.vertexSet()) {
-			if(!v.inCycle) continue;
+		for (Vertex v : toDraw) {
+			//if (!v.inCycle)continue;
 		    gl2.glPushMatrix(); 
 		    gl2.glTranslated((int)normalizeX(v.x), (int)normalizeY(v.y), 0.0); 
-		    consumptionRenderer.draw(""+v.oldId, 0, 0);
+		    String toRender = String.format("%.1f", v.consumption);
+		    if (v.consumption == -Double.MAX_VALUE)
+		    	toRender = "INF";
+		    consumptionRenderer.draw(toRender, 0, 0);
 		    consumptionRenderer.flush(); 
 		    gl2.glPopMatrix(); 
 		}
 		consumptionRenderer.end3DRendering();
-		*/
-	    
+	    */
+	 
 		System.out.println("drawing main lines");
 		gl2.glLineWidth((float)DisplayMode.getStrokeWidth(mode));
 	    gl2.glBegin( GL2.GL_LINES );   
@@ -248,16 +261,18 @@ public class NetworkVisualizer extends Visualizer{
 		}
 
 		System.out.println("drawing labels");
-		TextRenderer consumptionRenderer = new TextRenderer(new Font("Verdana", Font.BOLD, 16));
+		TextRenderer consumptionRenderer = new TextRenderer(new Font("Verdana", Font.BOLD, 8));
 		consumptionRenderer.begin3DRendering();
 		consumptionRenderer.setColor(Color.RED);
 		
 		if (drawConsumption) {
 			for (Vertex v : graph.vertexSet()) {
-				if(v.consumption < 0) continue;
 			    gl2.glPushMatrix(); 
 			    gl2.glTranslated((int)normalizeX(v.x), (int)normalizeY(v.y), 0.0); 
-			    consumptionRenderer.draw(""+v.consumption, 0, 0);
+			    String toRender = String.format("%.1f", v.consumption);
+			    if (v.consumption == -Double.MAX_VALUE)
+			    	toRender = "-INF";
+			    consumptionRenderer.draw(toRender, 0, 0);
 			    consumptionRenderer.flush(); 
 			    gl2.glPopMatrix(); 
 			}

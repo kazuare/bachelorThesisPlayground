@@ -15,10 +15,12 @@ public class Vertex {
 	public boolean locked = false;
 	public boolean betweenSectorBlock = false;
 	public String type = null;
+	
+	public double cycleInput = -1;
 	public boolean inCycle = false;
 	
 	public int placecode = -1;
-	public double consumption = -1;	
+	public double consumption = -Double.MAX_VALUE;	
 	public boolean sensorPlaced = false;
 	
 	public boolean colored = false;

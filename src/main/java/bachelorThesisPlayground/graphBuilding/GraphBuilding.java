@@ -99,7 +99,10 @@ public class GraphBuilding {
 			double highX = 11000;
 			double highY = 5000;
 			
-			List<Integer> bannedVertices = Arrays.asList(new Integer[]{144833201,144794101,144722801});
+			List<Integer> bannedVertices = Arrays.asList(new Integer[]{
+					144833201,144794101,144722801,196869101, 104756501,
+					106690301, 145401201, 190261001, 145400401, 144877001
+					});
 			
 			HashMap<Integer, Vertex> idToVertex = new HashMap<Integer, Vertex>(points.size());
 			for (Vertex p : points){
