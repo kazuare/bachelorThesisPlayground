@@ -12,17 +12,23 @@ public class VisualizerEventListener implements GLEventListener{
 	}
     @Override
     public void reshape( GLAutoDrawable glautodrawable, int x, int y, int width, int height ){
+    	System.out.println("reshape");
     	visualizer.setup( glautodrawable.getGL().getGL2(), width, height );
     }
     
     @Override
-    public void init( GLAutoDrawable glautodrawable ){}
+    public void init( GLAutoDrawable glautodrawable ){
+    	System.out.println("init");
+    }
     
     @Override
-    public void dispose( GLAutoDrawable glautodrawable ){}
+    public void dispose( GLAutoDrawable glautodrawable ){
+    	System.out.println("dispose");
+    }
     
     @Override
     public void display( GLAutoDrawable glautodrawable ){
+    	System.out.println("display");
     	visualizer.checkAndDisplay( glautodrawable.getGL().getGL2(), glautodrawable.getSurfaceWidth(), glautodrawable.getSurfaceHeight() );
     }
 }

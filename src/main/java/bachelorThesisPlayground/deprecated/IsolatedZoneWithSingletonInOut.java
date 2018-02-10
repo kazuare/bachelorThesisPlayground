@@ -1,4 +1,4 @@
-package bachelorThesisPlayground;
+package bachelorThesisPlayground.deprecated;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,17 +7,19 @@ import java.util.stream.Stream;
 
 import org.jgrapht.graph.SimpleWeightedGraph;
 
+import bachelorThesisPlayground.Edge;
+import bachelorThesisPlayground.Vertex;
 import bachelorThesisPlayground.water.flow.ConsumptionCalculator;
 
-public class IsolatedZone {/*
+public class IsolatedZoneWithSingletonInOut {
 	public List<Vertex> consumers = new ArrayList<>();
 	public List<Vertex> vertices = new ArrayList<>();
 	SimpleWeightedGraph<Vertex,Edge> hostGraph;
-	public List<Edge> entries;
-	public List<Edge> exits;
+	public Edge entry;
+	public Edge exit;
 	
 	//contract: e1 is incoming edge, e2 is outcoming, so you can travel from e1.b->e1.a through the zone
-	public IsolatedZone(SimpleWeightedGraph<Vertex,Edge> graph, List<Edge> entries, List<Edge> exits) {
+	public IsolatedZoneWithSingletonInOut(SimpleWeightedGraph<Vertex,Edge> graph, Edge e1, Edge e2) {
 		hostGraph = graph;
 		registerVertex(e1.b);
 		for (int i = 0; i < vertices.size(); i++) {
@@ -33,14 +35,6 @@ public class IsolatedZone {/*
 			}
 		}
 		registerVertex(e2.a);
-		
-		for (Edge e: exits) {
-			e.magical = true;
-		}
-
-		for (Edge e: entries) {
-			e.magical = true;
-		}
 		
 		e1.magical = true;
 		e2.magical = true;
@@ -70,21 +64,15 @@ public class IsolatedZone {/*
 	}
 
 	public double getEntryFlow(){
-		double sum = 0;
-		for (Edge entry : entries)
-			sum +=  entry.b.consumption
+		return entry.b.consumption
 				/ ConsumptionCalculator.findStartsOfInputEdges(hostGraph, entry.b).size() 
 				* (1 + entry.leak);
-		return sum;
 	}
 
 	public double getExitFlow(){
-		double sum = 0;
-		for (Edge exit : exits)
-			sum += exit.b.consumption
+		return exit.b.consumption
 				/ ConsumptionCalculator.findStartsOfInputEdges(hostGraph, exit.b).size() 
 				* (1 + exit.leak);
-		return sum;
 	}
 	
 	public String zoneCheck(){
@@ -99,5 +87,5 @@ public class IsolatedZone {/*
 			}
 			return "" + getEntryFlow() + " " + getInnerConsumption() + " " + getExitFlow();
 		}
-	}*/
+	}
 }

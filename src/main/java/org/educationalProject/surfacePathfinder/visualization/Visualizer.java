@@ -17,6 +17,7 @@ public abstract class Visualizer {
 	protected boolean dataSet = false;
 	protected int width;
 	protected int height;
+	public String name;
 	/**
 	* Is invoked when window init or reshape occurs
 	* Does some geometry stuff
@@ -88,12 +89,12 @@ public abstract class Visualizer {
 
         }
 
-        BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
 
         bufferedImage.setRGB(0, 0, width, height, pixels, 0, width);
 
         try {
-            ImageIO.write(bufferedImage, "PNG", new File("C:\\users\\test\\desktop\\yo.png"));
+            ImageIO.write(bufferedImage, "PNG", new File("C:\\users\\test\\desktop\\"+name+".png"));
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -13,6 +13,18 @@ import bachelorThesisPlayground.Vertex;
 
 public class WaterFlow {
 	
+	public static void setFlowDirections(SimpleWeightedGraph<Vertex,Edge> component) {
+		List<Vertex> errors = new ArrayList<>();
+		
+		WaterFlow.setWaterFlowDirections(component);
+		errors.addAll(WaterFlow.waterFlowSanityCheck(component));
+		
+		System.out.println("errors: " + errors);
+		if (errors.size() > 0 )
+			throw new RuntimeException("water flow sanity check");
+		
+	}
+	
 	public static void setFlowDirections(List<SimpleWeightedGraph<Vertex,Edge>> components) {
 		List<Vertex> errors = new ArrayList<>();
 		

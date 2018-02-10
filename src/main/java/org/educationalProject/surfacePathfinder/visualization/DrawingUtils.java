@@ -14,21 +14,24 @@ import bachelorThesisPlayground.Vertex;
 
 public class DrawingUtils {
 
-	public static void saveGraph(SimpleWeightedGraph<Vertex,Edge> graph, SimpleWeightedGraph<Vertex,Edge> overlayGraph, List<Vertex> pointsToLabel){
+	public static void saveGraph(String name, SimpleWeightedGraph<Vertex,Edge> graph, SimpleWeightedGraph<Vertex,Edge> overlayGraph, List<Vertex> pointsToLabel, boolean drawLabels, boolean drawConsumption){
 		//save as png file			
 		NetworkVisualizer visScreenshot = new NetworkVisualizer()
 				.setMode("screenshot")
 				.setData(graph)
-				.setDefaultWidth(10000)
+				.setDefaultWidth(6000)
 				.setOverlayData(overlayGraph)
 				.setPointsToLabel(pointsToLabel)
-				.setLabelDrawing(false)
-				.setConsumptionDrawing(true)
+				.setLabelDrawing(drawLabels)
+				.setConsumptionDrawing(drawConsumption)
 				.calculateWeightAndHeight();
+		
+		visScreenshot.name = name;
+		
 		Screenshooter.start(visScreenshot, visScreenshot.getWidth() + 50, visScreenshot.getHeight()+ 50);
 
-		Path source = FileSystems.getDefault().getPath("c:\\users\\test\\desktop\\yo.png");
-		Path out = FileSystems.getDefault().getPath("yo.png");
+		Path source = FileSystems.getDefault().getPath("c:\\users\\test\\desktop\\" + name + ".png");
+		Path out = FileSystems.getDefault().getPath(name + ".png");
 		try {
 		    Files.copy(source, out, StandardCopyOption.REPLACE_EXISTING);
 		} catch (IOException e) {
@@ -45,7 +48,8 @@ public class DrawingUtils {
 				.setOverlayData(overlayGraph)
 				.setPointsToLabel(pointsToLabel)
 				.setOffset(true)
-				.setLabelDrawing(false)
+				.setLabelDrawing(true)
+				.setConsumptionDrawing(false)
 				.calculateWeightAndHeight();
 		SwingWindow.start(vis, vis.getWidth() + 50, vis.getHeight()+ 50, "pipes");
 	}

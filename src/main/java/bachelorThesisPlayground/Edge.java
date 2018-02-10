@@ -12,6 +12,9 @@ public class Edge {
 	//from 0 to 1
 	public double leak = 0;
 	
+	public boolean magical = false;
+	public double calculatedFlow = 0;
+	
 	public Edge(int id) {
 		this.id = id;
 	}

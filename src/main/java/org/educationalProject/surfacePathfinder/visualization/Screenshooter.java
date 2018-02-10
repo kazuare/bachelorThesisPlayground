@@ -34,6 +34,7 @@ public class Screenshooter {
             public void init(GLAutoDrawable drawable) {
                 drawable.getContext().makeCurrent();
                 visualizer.setup( drawable.getGL().getGL2(), width, height );
+                visualizer.checkAndDisplay( drawable.getGL().getGL2(), drawable.getSurfaceWidth(), drawable.getSurfaceHeight() );
             }
 
             public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {
@@ -46,7 +47,7 @@ public class Screenshooter {
 
 			@Override
 			public void display(GLAutoDrawable drawable) {
-			    visualizer.checkAndDisplay( drawable.getGL().getGL2(), drawable.getSurfaceWidth(), drawable.getSurfaceHeight() );
+			    
 	            
 			}
         });
@@ -59,7 +60,7 @@ public class Screenshooter {
         BufferedImage im = new AWTGLReadBufferUtil(drawable.getGLProfile(), false).readPixelsToBufferedImage(drawable.getGL(), 0, 0, width, height, true /* awtOrientation */);
         try {
             System.out.println("Writing");
-            OutputStream stream = new BufferedOutputStream(new FileOutputStream("C:\\users\\test\\desktop\\yo.png"), 100000);
+            OutputStream stream = new BufferedOutputStream(new FileOutputStream("C:\\users\\test\\desktop\\"+visualizer.name+".png"), 100000);
 			ImageIO.write(im,"png", stream);
 			stream.close();
 		} catch (IOException e) {

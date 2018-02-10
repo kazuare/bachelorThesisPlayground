@@ -61,7 +61,7 @@ public class NetworkVisualizer extends Visualizer{
 		System.out.println("attention point: " + point);
 		WeightedGraph<Vertex, Edge> truncatedCopy = new SimpleWeightedGraph<>(Edge.class);
 		for (Vertex a : graph.vertexSet()) {
-			if (Math.abs(a.x - point.x) < 200 && Math.abs(a.y - point.y) < 200) {
+			if (Math.abs(a.x - point.x) < 500 && Math.abs(a.y - point.y) < 500) {
 				truncatedCopy.addVertex(a);
 			}
 		}
@@ -179,7 +179,10 @@ public class NetworkVisualizer extends Visualizer{
 	    gl2.glLineWidth((float)DisplayMode.getStrokeWidth(mode)*2);
 	    gl2.glBegin( GL2.GL_LINES );   
 		for (Edge e : graph.edgeSet()) {
-			if (e.leak > 0) {
+			if(e.magical) {
+				drawColoredPoint(gl2, e.a, 1, 0.5f, 0); 
+		    	drawColoredPoint(gl2, e.b, 1, 0, 0.5f); 
+			} else if (e.leak > 0) {
 		    	drawColoredPoint(gl2, e.a, 0, 0, 0); 
 		    	drawColoredPoint(gl2, e.b, 0, 0, 0); 
 			}		      
@@ -284,15 +287,12 @@ public class NetworkVisualizer extends Visualizer{
 		
 		
 		System.out.println("drawing labels");
-		TextRenderer textRenderer = new TextRenderer(new Font("Verdana", Font.BOLD, 12));
+		TextRenderer textRenderer = new TextRenderer(new Font("Verdana", Font.BOLD, 9));
 		textRenderer.begin3DRendering();
-		textRenderer.setColor(Color.BLACK);
+		textRenderer.setColor(Color.RED);
 		
 		if (drawLabel) {
-			for (Vertex v : graph.vertexSet()) {
-				if (!v.pumpStationExit && !v.betweenSectorBlock)
-					continue;
-				
+			for (Vertex v : graph.vertexSet()) {				
 			    gl2.glPushMatrix(); 
 			    gl2.glTranslated((int)normalizeX(v.x), (int)normalizeY(v.y), 0.0); 
 				textRenderer.draw(""+v.oldId, 0, 0);
