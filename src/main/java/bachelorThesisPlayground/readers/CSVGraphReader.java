@@ -122,7 +122,7 @@ public class CSVGraphReader {
 				
 				for(int i = 0; i < points.size(); i++) {
 					if (points.get(i).oldId == id) {
-						System.out.println("point with id " + id + " is " + (status?"":"not") + " locked");
+						//System.out.println("point with id " + id + " is " + (status?"":"not") + " locked");
 						points.get(i).locked = status;
 					}
 				}

@@ -101,7 +101,10 @@ public class GraphBuilding {
 			
 			List<Integer> bannedVertices = Arrays.asList(new Integer[]{
 					144833201,144794101,144722801,196869101, 104756501,
-					106690301, 145401201, 190261001, 145400401, 144877001
+					106690301, 145401201, 190261001, 145400401, 144877001,
+					//ok ones
+					144533001, 179973901, 105762101, 104566001, 
+					188864001, 106501601, 104589101, 145424901
 					});
 			
 			HashMap<Integer, Vertex> idToVertex = new HashMap<Integer, Vertex>(points.size());
@@ -298,11 +301,21 @@ public class GraphBuilding {
 				Collections.sort(res, (a,b)->Integer.compare(a.oldId, b.oldId));
 				System.out.println(key + " " + res);
 			}
+				
+			boolean graphChanged = false;
+			do {
+				graphChanged = false;
+				for (Vertex v : new ArrayList<>(graph.vertexSet()))
+					if (graph.edgesOf(v).size() == 1 && v.placecode == -1 && !v.pumpStationExit) {
+						graph.removeVertex(v);
+						graphChanged = true;
+					}
+			} while (graphChanged);
+				
+				
 			return graph;
 					
 	}
-	
-
 	public static void removeComponentWithPumpExit(SimpleWeightedGraph<Vertex,Edge> graph, int pumpExitId){
 		Vertex pumpExitToDelete= graph.vertexSet().stream()
 				.filter(x->x.oldId==pumpExitId)
@@ -508,8 +521,12 @@ public class GraphBuilding {
 		Map<Integer, Double> consumption = Main.dbReader.readConsumption();
 		for (Vertex p : points) 
 			if (consumption.get(p.placecode)!=null){
-				p.consumption = consumption.get(p.placecode);
-				System.out.println("Vertex " + p + " has consumption level " + p.consumption);
+				if (consumption.get(p.placecode) != 0) {
+					p.consumption = consumption.get(p.placecode);
+					System.out.println("Vertex " + p + " has consumption level " + p.consumption);
+				} else {
+					System.out.println("Consumption level 0: rejected, as the sensor may be just deactivated");
+				}
 			}
 		
 		return points;

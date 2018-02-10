@@ -61,7 +61,7 @@ public class NetworkVisualizer extends Visualizer{
 		System.out.println("attention point: " + point);
 		WeightedGraph<Vertex, Edge> truncatedCopy = new SimpleWeightedGraph<>(Edge.class);
 		for (Vertex a : graph.vertexSet()) {
-			if (Math.abs(a.x - point.x) < 500 && Math.abs(a.y - point.y) < 500) {
+			if (Math.abs(a.x - point.x) < 200 && Math.abs(a.y - point.y) < 200) {
 				truncatedCopy.addVertex(a);
 			}
 		}
@@ -143,19 +143,22 @@ public class NetworkVisualizer extends Visualizer{
 		consumptionRenderer.setColor(Color.RED);
 		
 		for (Vertex v : toDraw) {
-			//if (!v.inCycle)continue;
+			if (!v.inCycle)continue;
 		    gl2.glPushMatrix(); 
 		    gl2.glTranslated((int)normalizeX(v.x), (int)normalizeY(v.y), 0.0); 
 		    String toRender = String.format("%.1f", v.consumption);
 		    if (v.consumption == -Double.MAX_VALUE)
 		    	toRender = "INF";
+		    
+		    toRender = ""+v.oldId;
+		    
 		    consumptionRenderer.draw(toRender, 0, 0);
 		    consumptionRenderer.flush(); 
 		    gl2.glPopMatrix(); 
 		}
 		consumptionRenderer.end3DRendering();
 	    */
-	 
+	    
 		System.out.println("drawing main lines");
 		gl2.glLineWidth((float)DisplayMode.getStrokeWidth(mode));
 	    gl2.glBegin( GL2.GL_LINES );   
@@ -177,8 +180,8 @@ public class NetworkVisualizer extends Visualizer{
 	    gl2.glBegin( GL2.GL_LINES );   
 		for (Edge e : graph.edgeSet()) {
 			if (e.leak > 0) {
-		    	drawColoredPoint(gl2, e.a, 1, 0, 0); 
-		    	drawColoredPoint(gl2, e.b, 1, 0, 0); 
+		    	drawColoredPoint(gl2, e.a, 0, 0, 0); 
+		    	drawColoredPoint(gl2, e.b, 0, 0, 0); 
 			}		      
 		}
 	    gl2.glEnd(); 
@@ -215,15 +218,7 @@ public class NetworkVisualizer extends Visualizer{
 				drawColoredPoint(gl2, v, 0.5f, 0.5f, 0.5f);
 		}		
 		gl2.glEnd();
-		
-		gl2.glPointSize((float)DisplayMode.getBigPointSize(mode)*1.5f);
-		gl2.glBegin(GL.GL_POINTS);        	
-		for (Vertex v : graph.vertexSet()) {
-			if(v.locked)
-				drawColoredPoint(gl2, v, 1f, 0f, 0f);
-		}		
-		gl2.glEnd();
-		
+				
 		gl2.glPointSize((float)DisplayMode.getBigPointSize(mode));
 		gl2.glBegin(GL.GL_POINTS);        	
 		for (Vertex v : graph.vertexSet()) {
@@ -240,7 +235,7 @@ public class NetworkVisualizer extends Visualizer{
 				drawColoredPoint(gl2, v, 1f, 0.5f, 0f);
 		}		
 		gl2.glEnd();	
-		
+
 		gl2.glPointSize((float)(DisplayMode.getBigPointSize(mode)*1.5));
 		gl2.glBegin(GL.GL_POINTS);        	
 		for (Vertex v : graph.vertexSet()) {
@@ -249,6 +244,14 @@ public class NetworkVisualizer extends Visualizer{
 		}		
 		gl2.glEnd();
 
+		gl2.glPointSize((float)DisplayMode.getBigPointSize(mode)*1.5f);
+		gl2.glBegin(GL.GL_POINTS);        	
+		for (Vertex v : graph.vertexSet()) {
+			if(v.locked)
+				drawColoredPoint(gl2, v, 1f, 0f, 0f);
+		}		
+		gl2.glEnd();
+		
 		System.out.println("drawing overlay");
 		if (overlayGraph != null) {
 			gl2.glLineWidth((float)DisplayMode.getStrokeWidth(mode));
@@ -261,7 +264,7 @@ public class NetworkVisualizer extends Visualizer{
 		}
 
 		System.out.println("drawing labels");
-		TextRenderer consumptionRenderer = new TextRenderer(new Font("Verdana", Font.BOLD, 8));
+		TextRenderer consumptionRenderer = new TextRenderer(new Font("Verdana", Font.BOLD, 9));
 		consumptionRenderer.begin3DRendering();
 		consumptionRenderer.setColor(Color.RED);
 		
@@ -309,7 +312,7 @@ public class NetworkVisualizer extends Visualizer{
 		textRenderer.end3DRendering();
 		
 	}
-
+	
 	public NetworkVisualizer setOffset(boolean offset){
 		this.offset = offset;
 		if (offset) {
