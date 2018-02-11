@@ -1,6 +1,7 @@
 package bachelorThesisPlayground;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,19 +31,33 @@ public class Main {
 
 		//DrawingUtils.saveGraph("yo_labels", graph, null, null, true, false);	
 		
-		IsolatedZoneWithSingletonInOut iz = new IsolatedZoneWithSingletonInOut(component, findEdge(component, 106802401, 106802301),
-													findEdge(component, 106914101, 106887001));
+		IsolatedZone iz = new IsolatedZone(component, 
+				Arrays.asList(findEdge(component, 106802401, 106802301)),
+				Arrays.asList(findEdge(component, 106914101, 106887001)));
+		
+		IsolatedZone iz2 = new IsolatedZone(component, 
+				Arrays.asList(
+					findEdge(component, 106613101, 106811801),
+					findEdge(component, 106690601, 106718301)					
+				),
+				Arrays.asList(findEdge(component, 106873601, 106916701)));
 		
 		ConsumptionCalculator.cleanNonLeafVertexesWithPlacecodes(component);
+		
+		
 		//BackloggedCycleResolution.detectCycles(component);
 		//Vertex focusPoint = breakSomething(component);
-		findEdge(component, 106878301, 106914101).leak = 0.5;
-		ConsumptionCalculator.recurrentSetWaterConsumption(component);	
-		DrawingUtils.drawGraphWithAttentionPoint(component, findVertex(component, 106878301));
 		
+		findEdge(component, 106806201, 106798301).leak = 0.5;
+		findEdge(component, 106878301, 106914101).leak = 0.5;
+		
+		
+		ConsumptionCalculator.recurrentSetWaterConsumption(component);	
+		//DrawingUtils.drawGraphWithAttentionPoint(component, findVertex(component, 106878301));
 		
 		
 		System.out.println(iz.zoneCheck());
+		System.out.println(iz2.zoneCheck());
 		
 		DrawingUtils.saveGraph("yo", component, null, null, false, true);	
 		

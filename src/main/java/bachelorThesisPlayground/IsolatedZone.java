@@ -9,30 +9,50 @@ import org.jgrapht.graph.SimpleWeightedGraph;
 
 import bachelorThesisPlayground.water.flow.ConsumptionCalculator;
 
-public class IsolatedZone {/*
+public class IsolatedZone {
 	public List<Vertex> consumers = new ArrayList<>();
 	public List<Vertex> vertices = new ArrayList<>();
 	SimpleWeightedGraph<Vertex,Edge> hostGraph;
 	public List<Edge> entries;
 	public List<Edge> exits;
 	
-	//contract: e1 is incoming edge, e2 is outcoming, so you can travel from e1.b->e1.a through the zone
+	//contract: entries are incoming edges, exits are outcoming, 
+	//so you can travel from entry.b->exit.a through the zone
+	//(all entries and exits can be reached from each other)
 	public IsolatedZone(SimpleWeightedGraph<Vertex,Edge> graph, List<Edge> entries, List<Edge> exits) {
 		hostGraph = graph;
-		registerVertex(e1.b);
+		
+		List<Vertex> startsOfEntries = entries.stream().map(e->e.a).collect(Collectors.toList());
+		List<Vertex> endsOfEntries = entries.stream().map(e->e.b).collect(Collectors.toList());		
+		List<Vertex> startsOfExits = exits.stream().map(e->e.a).collect(Collectors.toList());
+		List<Vertex> endsOfExits = exits.stream().map(e->e.b).collect(Collectors.toList());
+
+		registerVertex(endsOfEntries.get(0));
+		
 		for (int i = 0; i < vertices.size(); i++) {
 			for (Vertex v : getNeighbours(graph, vertices.get(i))) {
 				System.out.println("traversing " + v);
-				if (v.equals(e1.a) || v.equals(e2.b)) {
+				if (startsOfEntries.contains(v) || endsOfExits.contains(v)) {
 					//traversion algo came from the backdoor and struck us, zone is not isolated
-					if(i != 0 && v.equals(e1.a))
+					//but this is expected on the first iteration
+					if(i != 0)
 						throw new RuntimeException("not isolated");
-				} else if ( !(v.equals(e2.a) || vertices.contains(v)) ) {
+				} else if ( !(startsOfExits.contains(v) || endsOfEntries.contains(v) || vertices.contains(v)) ) {
 					registerVertex(v);
 				}
 			}
 		}
-		registerVertex(e2.a);
+		
+		//add all ends of entries and starts of exits if they are not present
+		List<Vertex> a = new ArrayList<>();
+		for (Vertex v : endsOfEntries)
+			if (!vertices.contains(v))
+				registerVertex(v);
+		
+
+		for (Vertex v : startsOfExits)
+			if (!vertices.contains(v))
+				registerVertex(v);
 		
 		for (Edge e: exits) {
 			e.magical = true;
@@ -41,11 +61,8 @@ public class IsolatedZone {/*
 		for (Edge e: entries) {
 			e.magical = true;
 		}
-		
-		e1.magical = true;
-		e2.magical = true;
-		entry = e1;
-		exit = e2;
+		this.entries = new ArrayList<>(entries);
+		this.exits = new ArrayList<>(exits);
 	}
 	
 	public void registerVertex(Vertex v){
@@ -97,7 +114,7 @@ public class IsolatedZone {/*
 				v.b = 0; 
 				v.g = 0;
 			}
-			return "" + getEntryFlow() + " " + getInnerConsumption() + " " + getExitFlow();
+			return "Leak event: " + getEntryFlow() + " " + getInnerConsumption() + " " + getExitFlow();
 		}
-	}*/
+	}
 }
