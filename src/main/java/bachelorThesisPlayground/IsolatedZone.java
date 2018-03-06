@@ -27,16 +27,19 @@ public class IsolatedZone {
 		List<Vertex> startsOfExits = exits.stream().map(e->e.a).collect(Collectors.toList());
 		List<Vertex> endsOfExits = exits.stream().map(e->e.b).collect(Collectors.toList());
 
-		registerVertex(endsOfEntries.get(0));
+		for (Vertex v : endsOfEntries) {
+			registerVertex(v);
+		}
+		
+		for (Vertex v : startsOfExits) {
+			registerVertex(v);
+		}
 		
 		for (int i = 0; i < vertices.size(); i++) {
 			for (Vertex v : getNeighbours(graph, vertices.get(i))) {
 				System.out.println("traversing " + v);
 				if (startsOfEntries.contains(v) || endsOfExits.contains(v)) {
-					//traversion algo came from the backdoor and struck us, zone is not isolated
-					//but this is expected on the first iteration
-					if(i != 0)
-						throw new RuntimeException("not isolated");
+					System.out.println("startsOfEntries.contains(v) || endsOfExits.contains(v)");
 				} else if ( !(startsOfExits.contains(v) || endsOfEntries.contains(v) || vertices.contains(v)) ) {
 					registerVertex(v);
 				}
@@ -105,7 +108,7 @@ public class IsolatedZone {
 	}
 	
 	public String zoneCheck(){
-		if (getEntryFlow() - getInnerConsumption() - getExitFlow() == 0)
+		if (Math.abs(getEntryFlow() - getInnerConsumption() - getExitFlow()) < 0.000001)
 			return "OK";
 		else {
 			for (Vertex v : vertices) {
@@ -118,3 +121,59 @@ public class IsolatedZone {
 		}
 	}
 }
+
+
+
+
+//has bug
+
+//contract: entries are incoming edges, exits are outcoming, 
+	//so you can travel from entry.b->exit.a through the zone
+	//(all entries and exits can be reached from each other)
+	/*
+	public IsolatedZone(SimpleWeightedGraph<Vertex,Edge> graph, List<Edge> entries, List<Edge> exits) {
+		hostGraph = graph;
+		
+		List<Vertex> startsOfEntries = entries.stream().map(e->e.a).collect(Collectors.toList());
+		List<Vertex> endsOfEntries = entries.stream().map(e->e.b).collect(Collectors.toList());		
+		List<Vertex> startsOfExits = exits.stream().map(e->e.a).collect(Collectors.toList());
+		List<Vertex> endsOfExits = exits.stream().map(e->e.b).collect(Collectors.toList());
+
+		registerVertex(endsOfEntries.get(0));
+		
+		for (int i = 0; i < vertices.size(); i++) {
+			for (Vertex v : getNeighbours(graph, vertices.get(i))) {
+				System.out.println("traversing " + v);
+				if (startsOfEntries.contains(v) || endsOfExits.contains(v)) {
+					//traversion algo came from the backdoor and struck us, zone is not isolated
+					//but this is expected on the first iteration
+					if(i != 0)
+						throw new RuntimeException("not isolated");
+				} else if ( !(startsOfExits.contains(v) || endsOfEntries.contains(v) || vertices.contains(v)) ) {
+					registerVertex(v);
+				}
+			}
+		}
+		
+		//add all ends of entries and starts of exits if they are not present
+		List<Vertex> a = new ArrayList<>();
+		for (Vertex v : endsOfEntries)
+			if (!vertices.contains(v))
+				registerVertex(v);
+		
+
+		for (Vertex v : startsOfExits)
+			if (!vertices.contains(v))
+				registerVertex(v);
+		
+		for (Edge e: exits) {
+			e.magical = true;
+		}
+
+		for (Edge e: entries) {
+			e.magical = true;
+		}
+		this.entries = new ArrayList<>(entries);
+		this.exits = new ArrayList<>(exits);
+	}
+	*/

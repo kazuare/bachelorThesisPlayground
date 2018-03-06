@@ -14,6 +14,7 @@ public class Vertex {
 	public boolean canBeLocked = false;
 	public boolean locked = false;
 	public boolean betweenSectorBlock = false;
+	public boolean pressureTransferCandidate = false;
 	public String type = null;
 	
 	public double cycleInput = -1;

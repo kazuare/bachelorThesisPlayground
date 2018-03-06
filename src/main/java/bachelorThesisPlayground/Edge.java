@@ -11,7 +11,8 @@ public class Edge {
 	public double diameter;
 	//from 0 to 1
 	public double leak = 0;
-	
+
+	public boolean canBeMagical = false;
 	public boolean magical = false;
 	public double calculatedFlow = 0;
 	

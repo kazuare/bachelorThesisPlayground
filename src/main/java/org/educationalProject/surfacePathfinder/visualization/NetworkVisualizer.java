@@ -2,27 +2,17 @@ package org.educationalProject.surfacePathfinder.visualization;
 
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.List;
 
-import javax.imageio.ImageIO;
-
 import org.jgrapht.WeightedGraph;
-import org.jgrapht.graph.DefaultDirectedWeightedGraph;
-import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 
-import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.util.awt.TextRenderer;
 
 import bachelorThesisPlayground.Edge;
 import bachelorThesisPlayground.Vertex;
-import io.github.jdiemke.triangulation.Triangle2D;
 
 public class NetworkVisualizer extends Visualizer{
 	protected WeightedGraph<Vertex, Edge> graph;
@@ -179,12 +169,18 @@ public class NetworkVisualizer extends Visualizer{
 	    gl2.glLineWidth((float)DisplayMode.getStrokeWidth(mode)*2);
 	    gl2.glBegin( GL2.GL_LINES );   
 		for (Edge e : graph.edgeSet()) {
-			if(e.magical) {
+			if(e.magical && e.leak > 0) {
+				drawColoredPoint(gl2, e.a, 0.5f, 0, 0.5f); 
+		    	drawColoredPoint(gl2, e.b, 0, 0, 1); 
+			} else if(e.magical) {
 				drawColoredPoint(gl2, e.a, 1, 0.5f, 0); 
 		    	drawColoredPoint(gl2, e.b, 1, 0, 0.5f); 
 			} else if (e.leak > 0) {
 		    	drawColoredPoint(gl2, e.a, 0, 0, 0); 
 		    	drawColoredPoint(gl2, e.b, 0, 0, 0); 
+			} else if (e.canBeMagical) {
+				drawColoredPoint(gl2, e.a, 1, 0.3f, 0); 
+		    	drawColoredPoint(gl2, e.b, 1, 0, 0.3f); 
 			}		      
 		}
 	    gl2.glEnd(); 
@@ -195,6 +191,14 @@ public class NetworkVisualizer extends Visualizer{
 		for (Vertex v : graph.vertexSet()) {
 			if(v.sensorPlaced)
 				drawColoredPoint(gl2, v, 0f, 0f, 1f);
+		}		
+		gl2.glEnd();
+		
+		gl2.glPointSize((float)(DisplayMode.getBigPointSize(mode)*1.4));
+		gl2.glBegin(GL.GL_POINTS);        	
+		for (Vertex v : graph.vertexSet()) {
+			if(v.pressureTransferCandidate)
+				drawColoredPoint(gl2, v, 0f, 1f, 0f);
 		}		
 		gl2.glEnd();
 		
@@ -238,7 +242,7 @@ public class NetworkVisualizer extends Visualizer{
 				drawColoredPoint(gl2, v, 1f, 0.5f, 0f);
 		}		
 		gl2.glEnd();	
-
+		
 		gl2.glPointSize((float)(DisplayMode.getBigPointSize(mode)*1.5));
 		gl2.glBegin(GL.GL_POINTS);        	
 		for (Vertex v : graph.vertexSet()) {
