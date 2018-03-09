@@ -26,6 +26,12 @@ public class Edge {
 		b = new Vertex(bid);
 	}
 
+	public Edge(int eid, Vertex a, Vertex b) {
+		id = eid;
+		this.a = a;
+		this.b = b;
+	}
+	
 	@Override
 	public boolean equals(Object o){
 		if (!(o instanceof Edge)) return false; 

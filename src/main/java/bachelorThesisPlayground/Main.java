@@ -1,5 +1,6 @@
 package bachelorThesisPlayground;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -22,6 +23,7 @@ import bachelorThesisPlayground.water.flow.WaterFlow;
 public class Main {
 
 	public static DBReader dbReader = new DBReader();
+	@SuppressWarnings("serial")
 	public static void main(String[] args) {		
 		//writeJSONGraphForD3();
 		//we do layout in d3 and get FINAL_ALL_POINTS.json
@@ -52,34 +54,115 @@ public class Main {
 		
 		
 		//BackloggedCycleResolution.detectCycles(component);
-		//Vertex focusPoint = breakSomething(component);
-		//manual leaks
-		
-		//findEdge(component, 106806201, 106798301).leak = 0.5;
-		//findEdge(component, 106878301, 106914101).leak = 0.5;
-		
+	
 		List<Vertex> brokenPoints = new ArrayList<>();
 		for (int i = 0; i < 3; i++){
-			brokenPoints.add(reasonablyBreakSomething(component));
+			//brokenPoints.add(reasonablyBreakSomething(component));
 		}
 		
 		ConsumptionCalculator.recurrentSetWaterConsumption(component);	
-		//DrawingUtils.drawGraphWithAttentionPoint(component, findVertex(component, 106878301));
 		
-/*		
-		System.out.println(iz.zoneCheck());
-		System.out.println(iz2.zoneCheck());
-*/		
 		setPossiblePressureTransferCandidates(component);
 		
 		setCanBeMagical(component);
 
+		List<Set<Vertex>> miniComponents = getPointsOfIsolatedComponents(getComponentsIzolatedByPossiblyMagicalEdges(component));
+		
+		for (Set<Vertex> miniComponent : miniComponents) 
+			unmagicUnusableMagicEdges(component, miniComponent);
+		
+		miniComponents = getPointsOfIsolatedComponents(getComponentsIzolatedByPossiblyMagicalEdges(component));
+				
+		//план:
+		/* находим зону с наименьшим весом
+		 * последовательно убираем у волшебные ребра (одно за раз), считаем метрику по графу
+		 * находим ребро, при уборке которого метрика по всему графу - лучшая
+		 * убираем это ребро
+		 * метрика - сумма квадратов
+		 * */
+		
+		int magicalEdgeCount = component.edgeSet()
+				.stream()
+				.mapToInt(e->e.canBeMagical ? 1 : 0)
+				.sum();
+		
+		System.out.println("Maximum magical edge count: " + magicalEdgeCount);
+		System.out.println("Initial metric value is " + new DecimalFormat("#.###")
+				.format(getSquareSum(component, miniComponents)));
+		
+		Set<Vertex> smallestComponent = miniComponents.stream()
+				.min((a,b)->
+					Double.compare(getMiniComponentWeight(component, a), getMiniComponentWeight(component, b)))
+				.get();
+		
+		Set<Edge> magicalEdgesOfSmallestComponent = new HashSet<Edge>();
+		magicalEdgesOfSmallestComponent.addAll(getEntriesOfComponent(component, smallestComponent));
+		magicalEdgesOfSmallestComponent.addAll(getExitsOfComponent(component, smallestComponent));
+		
+		while (magicalEdgeCount > 150) {
+			
+			Edge bestEdgeForDeletion = null;
+			double bestMetricValue = Double.MAX_VALUE;
+			
+			for (Edge edge : magicalEdgesOfSmallestComponent) {
+				SimpleWeightedGraph<Vertex,Edge> componentCopy = new SimpleWeightedGraph<Vertex,Edge>(Edge.class);
+				component.vertexSet().forEach(v->componentCopy.addVertex(v));
+				for (Edge e : component.edgeSet()) {				
+					Edge copy = new Edge(e.id, e.a, e.b);
+					copy.canBeMagical = e.equals(edge) ? false : e.canBeMagical;
+					copy.length = e.length;
+					componentCopy.addEdge(e.a, e.b, copy);
+				}
+				
+				List<Set<Vertex>> componentsWithOneUnmagickedEdge = getPointsOfIsolatedComponents(getComponentsIzolatedByPossiblyMagicalEdges(componentCopy));
+				
+				for (Set<Vertex> miniComponent : componentsWithOneUnmagickedEdge) 
+					unmagicUnusableMagicEdges(componentCopy, miniComponent);
+				
+				componentsWithOneUnmagickedEdge = getPointsOfIsolatedComponents(getComponentsIzolatedByPossiblyMagicalEdges(componentCopy));
+				
+				magicalEdgeCount = componentCopy.edgeSet()
+						.stream()
+						.mapToInt(e->e.canBeMagical ? 1 : 0)
+						.sum();
+				
+				double metricValue = getSquareSum(componentCopy, componentsWithOneUnmagickedEdge);				
+				if (bestMetricValue > metricValue) {
+					bestMetricValue = metricValue;
+					bestEdgeForDeletion = edge;
+				}			
+			}
+			
+			final Edge best = bestEdgeForDeletion;		
+			component.edgeSet().stream().filter(a->a.equals(best)).findFirst().get().canBeMagical = false;
+			
+			for (Set<Vertex> miniComponent : miniComponents) 
+				unmagicUnusableMagicEdges(component, miniComponent);
+			
+			miniComponents = getPointsOfIsolatedComponents(getComponentsIzolatedByPossiblyMagicalEdges(component));
+			
+			magicalEdgeCount = component.edgeSet()
+					.stream()
+					.mapToInt(e->e.canBeMagical ? 1 : 0)
+					.sum();
+			
+			System.out.println("Unmagicked " + best.id + ", " + magicalEdgeCount + " edges left");
+			double metricValue = getSquareSum(component, miniComponents);
+			System.out.println("Metric value is " + new DecimalFormat("#.###").format(metricValue));
+			
+			smallestComponent = miniComponents.stream()
+					.min((a,b)->
+						Double.compare(getMiniComponentWeight(component, a), getMiniComponentWeight(component, b)))
+					.get();
+			
+			magicalEdgesOfSmallestComponent = new HashSet<Edge>();
+			magicalEdgesOfSmallestComponent.addAll(getEntriesOfComponent(component, smallestComponent));
+			magicalEdgesOfSmallestComponent.addAll(getExitsOfComponent(component, smallestComponent));
+			
+		}
 		
 		List<IsolatedZone> zones = new ArrayList<>();
-		for (Set<Vertex> miniComponent : 
-				getPointsOfIsolatedComponents(getComponentsIzolatedByPossiblyMagicalEdges(component))) {
-			unmagicUnusableMagicEdges(component, miniComponent);
-			
+		for (Set<Vertex> miniComponent : miniComponents) {			
 			if(miniComponent.stream().filter(e->e.oldId == targetPumpStation).findAny().isPresent())
 				continue;				
 				
@@ -108,14 +191,31 @@ public class Main {
 		
 		System.out.println("Should see no more than " + shouldSeeNoMoreXErrors + " errors");
 		
-		for (int i = 0; i < 3; i++){
-			DrawingUtils.drawGraphWithAttentionPoint(component, brokenPoints.get(i));			
+		for (Vertex point : brokenPoints){
+			DrawingUtils.drawGraphWithAttentionPoint(component, point);			
 		}
 		
 		DrawingUtils.saveGraph("yo", component, null, null, false, true);	
 		
 		
 	}
+	
+	public static double getMiniComponentWeight(SimpleWeightedGraph<Vertex,Edge> graph, Set<Vertex> component) {
+		return component.stream()
+				.flatMap(v->graph.edgesOf(v).stream())
+				.distinct()
+				.mapToDouble(e->e.canBeMagical || e.magical ? 0 : e.length)
+				.sum();
+	} 
+	
+	public static double getSquareSum(SimpleWeightedGraph<Vertex,Edge> graph, List<Set<Vertex>> components) {
+		return components.stream()
+				.mapToDouble(component->{
+					double a = getMiniComponentWeight(graph,component);
+					return a*a;
+				})
+				.sum();
+	} 
 	
 	public static SimpleWeightedGraph<Vertex,Edge> getComponentsIzolatedByPossiblyMagicalEdges(SimpleWeightedGraph<Vertex,Edge> graph) {
 		SimpleWeightedGraph<Vertex,Edge> components = new SimpleWeightedGraph<Vertex,Edge>(Edge.class);

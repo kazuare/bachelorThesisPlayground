@@ -37,9 +37,9 @@ public class IsolatedZone {
 		
 		for (int i = 0; i < vertices.size(); i++) {
 			for (Vertex v : getNeighbours(graph, vertices.get(i))) {
-				System.out.println("traversing " + v);
+				//System.out.println("traversing " + v);
 				if (startsOfEntries.contains(v) || endsOfExits.contains(v)) {
-					System.out.println("startsOfEntries.contains(v) || endsOfExits.contains(v)");
+				//	System.out.println("startsOfEntries.contains(v) || endsOfExits.contains(v)");
 				} else if ( !(startsOfExits.contains(v) || endsOfEntries.contains(v) || vertices.contains(v)) ) {
 					registerVertex(v);
 				}
@@ -69,7 +69,7 @@ public class IsolatedZone {
 	}
 	
 	public void registerVertex(Vertex v){
-		System.out.println("registering " + v);
+		//System.out.println("registering " + v);
 		vertices.add(v);
 		if (v.placecode != -1)
 			consumers.add(v);
