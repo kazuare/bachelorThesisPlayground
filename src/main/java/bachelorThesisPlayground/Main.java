@@ -89,6 +89,10 @@ public class Main {
 		System.out.println("Maximum magical edge count: " + magicalEdgeCount);
 		System.out.println("Initial metric value is " + new DecimalFormat("#.###")
 				.format(getSquareSum(component, miniComponents)));
+		System.out.println("Initial mean weight is " + new DecimalFormat("#.###")
+				.format(getAverageWeight(component, miniComponents)));
+		System.out.println("Initial minimal weight is " + new DecimalFormat("#.###")
+				.format(getWeightOfSmallestComponent(component, miniComponents)));
 		
 		Set<Vertex> smallestComponent = miniComponents.stream()
 				.min((a,b)->
@@ -149,6 +153,11 @@ public class Main {
 			System.out.println("Unmagicked " + best.id + ", " + magicalEdgeCount + " edges left");
 			double metricValue = getSquareSum(component, miniComponents);
 			System.out.println("Metric value is " + new DecimalFormat("#.###").format(metricValue));
+			System.out.println("Mean weight is " + new DecimalFormat("#.###")
+					.format(getAverageWeight(component, miniComponents)));
+			System.out.println("Minimal weight is " + new DecimalFormat("#.###")
+					.format(getWeightOfSmallestComponent(component, miniComponents)));
+			System.out.println();
 			
 			smallestComponent = miniComponents.stream()
 					.min((a,b)->
@@ -207,6 +216,13 @@ public class Main {
 				.mapToDouble(e->e.canBeMagical || e.magical ? 0 : e.length)
 				.sum();
 	} 
+
+	public static double getWeightOfSmallestComponent(SimpleWeightedGraph<Vertex,Edge> graph, List<Set<Vertex>> components) {
+		return components.stream()
+				.mapToDouble(component->getMiniComponentWeight(graph,component))
+				.min()
+				.getAsDouble();
+	} 
 	
 	public static double getSquareSum(SimpleWeightedGraph<Vertex,Edge> graph, List<Set<Vertex>> components) {
 		return components.stream()
@@ -215,6 +231,13 @@ public class Main {
 					return a*a;
 				})
 				.sum();
+	} 
+
+	public static double getAverageWeight(SimpleWeightedGraph<Vertex,Edge> graph, List<Set<Vertex>> components) {
+		return components.stream()
+				.mapToDouble(component->getMiniComponentWeight(graph,component))
+				.average()
+				.getAsDouble();
 	} 
 	
 	public static SimpleWeightedGraph<Vertex,Edge> getComponentsIzolatedByPossiblyMagicalEdges(SimpleWeightedGraph<Vertex,Edge> graph) {
