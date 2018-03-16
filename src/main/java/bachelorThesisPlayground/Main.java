@@ -115,6 +115,7 @@ public class Main {
 					Edge copy = new Edge(e.id, e.a, e.b);
 					copy.canBeMagical = e.equals(edge) ? false : e.canBeMagical;
 					copy.length = e.length;
+					copy.diameter = e.diameter;
 					componentCopy.addEdge(e.a, e.b, copy);
 				}
 				
@@ -213,7 +214,7 @@ public class Main {
 		return component.stream()
 				.flatMap(v->graph.edgesOf(v).stream())
 				.distinct()
-				.mapToDouble(e->e.canBeMagical || e.magical ? 0 : e.length)
+				.mapToDouble(e->e.canBeMagical || e.magical ? 0 : e.diameter)
 				.sum();
 	} 
 
