@@ -13,7 +13,7 @@ import bachelorThesisPlayground.writers.JSONWriter;
 public class D3 {
 
 	//парсим файлы, пишем в джсон файл для d3 force v4
-	static void writeJSONGraphForD3() {
+	public static void writeJSONGraphForD3() {
 		//тянем ребра графа и идентификаторы их точек-концов
 		Map<Integer, Edge> edges = ExcelGraphReader.getEdgeSkeletons("C:\\Users\\test\\Desktop\\диплом\\связи_дуг_и_узлов.xlsx");
 		//тянем дополнительные параметры ребер - длину, диаметр и тд
