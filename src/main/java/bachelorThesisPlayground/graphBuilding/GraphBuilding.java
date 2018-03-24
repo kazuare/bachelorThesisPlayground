@@ -139,7 +139,7 @@ public class GraphBuilding {
 			
 			System.out.println(graph.vertexSet().size());
 
-			double edgeDeletingThreshold = 15;//8;
+			double edgeDeletingThreshold = 25;//8;
 			
 			Pair<Edge, Vertex> edgeAndPointToDelete = findEdgeAndPointToDelete(graph, edgeDeletingThreshold);
 			while (edgeAndPointToDelete != null){
@@ -446,8 +446,9 @@ public class GraphBuilding {
 					continue;
 				}
 				
-				boolean aCannotBeDeleted = graph.edgesOf(e.a).size() == 1 || e.a.pumpStationEntry || e.a.pumpStationExit || e.a.betweenSectorBlock || e.a.southernPumpStation;
-				boolean bCannotBeDeleted = graph.edgesOf(e.b).size() == 1 || e.b.pumpStationEntry || e.b.pumpStationExit || e.b.betweenSectorBlock || e.b.southernPumpStation;				
+				
+				boolean aCannotBeDeleted = graph.edgesOf(e.a).size() == 1 || e.a.pumpStationEntry || e.a.pumpStationExit || e.a.betweenSectorBlock || e.a.southernPumpStation || e.a.type.toLowerCase().contains("колодец");
+				boolean bCannotBeDeleted = graph.edgesOf(e.b).size() == 1 || e.b.pumpStationEntry || e.b.pumpStationExit || e.b.betweenSectorBlock || e.b.southernPumpStation || e.b.type.toLowerCase().contains("колодец");				
 				
 				Vertex pointToDelete;
 				if (aCannotBeDeleted && bCannotBeDeleted) {
@@ -459,6 +460,18 @@ public class GraphBuilding {
 				} else {
 					pointToDelete = (graph.edgesOf(e.a).size() < graph.edgesOf(e.b).size()) ? e.a : e.b;
 				}
+				
+				if (e.length > 2) { //to avoid layout artifacts
+					if (graph.edgesOf(pointToDelete).size() != 2) {
+						continue;
+					} 	
+					List<Edge> edges = new ArrayList<Edge>(graph.edgesOf(pointToDelete));
+					
+					if (edges.get(0).diameter != edges.get(1).diameter) {
+						continue;
+					}
+				}
+				
 				return new Pair<>(e, pointToDelete);
 			}
 		}
@@ -477,7 +490,8 @@ public class GraphBuilding {
 				104924601, 104947901, 104956301, 104947201, 104961401, 180683201, 104845101, 104866401, 104881601, 
 				104956901, 189236701, 104864101, 104949001, 104893901, 104865901, 104957301, 104956601, 104958201, 
 				104960101, 203199501, 203199301, 104962101, 104924901, 104865801, 104957501, 104959401, 104959301, 
-				104959501, 104949601, 104948501, 104863401, 104863301, 
+				104959501, 104949601, 104948501, 104863401, 104863301, 106601601, 144532001, 144700001, 144841701,
+				106433301, 106593301, 183601501, 196105301, 194046101, 196105701,
 				104934701//dublicate pump station exit		
 				});
 		

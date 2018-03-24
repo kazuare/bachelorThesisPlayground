@@ -2,6 +2,7 @@ package org.educationalProject.surfacePathfinder.visualization;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.jgrapht.WeightedGraph;
@@ -12,6 +13,7 @@ import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.util.awt.TextRenderer;
 
 import bachelorThesisPlayground.Edge;
+import bachelorThesisPlayground.Main;
 import bachelorThesisPlayground.Vertex;
 
 public class NetworkVisualizer extends Visualizer{
@@ -96,225 +98,224 @@ public class NetworkVisualizer extends Visualizer{
     	drawColoredPoint(gl2, new Vertex(1,0,0), 1, 0, 0);      
 	    gl2.glEnd(); 
 	    
-	    //cycle with outputs
-	    /*
-	    List<Vertex> toDraw = new ArrayList<>();
-	    
-	    System.out.println("drawing main lines");
-		gl2.glLineWidth((float)DisplayMode.getStrokeWidth(mode));
-	    gl2.glBegin( GL2.GL_LINES );   
-		for (Edge e : graph.edgeSet()) {
-		    if (e.a.inCycle) {
-		    	drawColoredPoint(gl2, e.a, 0, 1, 1);  
-		    	drawColoredPoint(gl2, e.b, 1, 0, 1); 
-		    	
-		    	toDraw.add(e.a);
-		    	toDraw.add(e.b);
-		    } else if (e.b.inCycle) {
-		    	drawColoredPoint(gl2, e.a, 0, 1, 1);  
-		    	drawColoredPoint(gl2, e.b, 1, 0, 1); 
-		    	
-		    	toDraw.add(e.a);
-		    	toDraw.add(e.b);
-		    }	      
-		}
-	    gl2.glEnd();
-	    
-	    gl2.glPointSize((float)DisplayMode.getBigPointSize(mode));
-		gl2.glBegin(GL.GL_POINTS);        	
-		for (Vertex v : toDraw) {
-			if (!v.inCycle)continue;
-			drawColoredPoint(gl2, v, 0f, 0f, 1f);
-		}		
-		gl2.glEnd();
-	    
-		TextRenderer consumptionRenderer = new TextRenderer(new Font("Verdana", Font.BOLD, 8));
-		consumptionRenderer.begin3DRendering();
-		consumptionRenderer.setColor(Color.RED);
-		
-		for (Vertex v : toDraw) {
-			if (!v.inCycle)continue;
-		    gl2.glPushMatrix(); 
-		    gl2.glTranslated((int)normalizeX(v.x), (int)normalizeY(v.y), 0.0); 
-		    String toRender = String.format("%.1f", v.consumption);
-		    if (v.consumption == -Double.MAX_VALUE)
-		    	toRender = "INF";
+	    if (Main.cycleFlow) {
+		    //cycle with outputs		    
+		    List<Vertex> toDraw = new ArrayList<>();
 		    
-		    toRender = ""+v.oldId;
-		    
-		    consumptionRenderer.draw(toRender, 0, 0);
-		    consumptionRenderer.flush(); 
-		    gl2.glPopMatrix(); 
-		}
-		consumptionRenderer.end3DRendering();
-	    */
-	    
-		System.out.println("drawing main lines");
-		gl2.glLineWidth((float)DisplayMode.getStrokeWidth(mode));
-	    gl2.glBegin( GL2.GL_LINES );   
-		for (Edge e : graph.edgeSet()) {
-		    if (!e.a.colored) {
-		    	drawColoredPoint(gl2, e.a, 0, 1, 1);   		    	
-		    } else {
-		    	drawColoredPoint(gl2, e.a, e.a.r, e.a.g, e.a.b); 
-		    }
-		    if (!e.b.colored) {
-		    	drawColoredPoint(gl2, e.b, 1, 0, 1); 		    	
-		    } else {
-		    	drawColoredPoint(gl2, e.b, e.b.r, e.b.g, e.b.b); 
-		    }		      
-		}
-	    gl2.glEnd(); 
-
-	    gl2.glLineWidth((float)DisplayMode.getStrokeWidth(mode)*2);
-	    gl2.glBegin( GL2.GL_LINES );   
-		for (Edge e : graph.edgeSet()) {
-			if(e.magical && e.leak > 0) {
-				drawColoredPoint(gl2, e.a, 0.5f, 0, 0.5f); 
-		    	drawColoredPoint(gl2, e.b, 0, 0, 1); 
-			} else if(e.magical) {
-				drawColoredPoint(gl2, e.a, 1, 0.5f, 0); 
-		    	drawColoredPoint(gl2, e.b, 1, 0, 0.5f); 
-			} else if (e.leak > 0) {
-		    	drawColoredPoint(gl2, e.a, 0, 0, 0); 
-		    	drawColoredPoint(gl2, e.b, 0, 0, 0); 
-			} else if (e.canBeMagical) {
-				drawColoredPoint(gl2, e.a, 1, 0.3f, 0); 
-		    	drawColoredPoint(gl2, e.b, 1, 0, 0.3f); 
-			}		      
-		}
-	    gl2.glEnd(); 
-	    
-		System.out.println("drawing points");
-		gl2.glPointSize((float)DisplayMode.getBigPointSize(mode)*2f);
-		gl2.glBegin(GL.GL_POINTS);        	
-		for (Vertex v : graph.vertexSet()) {
-			if(v.sensorPlaced)
-				drawColoredPoint(gl2, v, 0f, 0f, 1f);
-		}		
-		gl2.glEnd();
-		
-		gl2.glPointSize((float)(DisplayMode.getBigPointSize(mode)*1.4));
-		gl2.glBegin(GL.GL_POINTS);        	
-		for (Vertex v : graph.vertexSet()) {
-			if(v.pressureTransferCandidate)
-				drawColoredPoint(gl2, v, 0f, 1f, 0f);
-		}		
-		gl2.glEnd();
-		
-		gl2.glPointSize((float)DisplayMode.getBigPointSize(mode)*2f);
-		gl2.glBegin(GL.GL_POINTS);        	
-		for (Vertex v : graph.vertexSet()) {
-			if(v.pumpStationExit)
-				drawColoredPoint(gl2, v, 0f, 1f, 0f);
-		}		
-		gl2.glEnd();
-		
-		gl2.glPointSize((float)DisplayMode.getBigPointSize(mode)*3f);
-		gl2.glBegin(GL.GL_POINTS);        	
-		for (Vertex v : graph.vertexSet()) {
-			if(v.betweenSectorBlock)
-				drawColoredPoint(gl2, v, 1f, 0f, 0.5f);
-		}		
-		gl2.glEnd();
-		
-		gl2.glPointSize((float)DisplayMode.getBigPointSize(mode)*3f);
-		gl2.glBegin(GL.GL_POINTS);        	
-		for (Vertex v : graph.vertexSet()) {
-			if(v.southernPumpStation)
-				drawColoredPoint(gl2, v, 0.5f, 0.5f, 0.5f);
-		}		
-		gl2.glEnd();
-				
-		gl2.glPointSize((float)DisplayMode.getBigPointSize(mode));
-		gl2.glBegin(GL.GL_POINTS);        	
-		for (Vertex v : graph.vertexSet()) {
-			//if(v.type.toLowerCase().contains("колодец"))
-			if(v.placecode > -1)
-				drawColoredPoint(gl2, v, 0f, 0f, 0f);
-		}		
-		gl2.glEnd();
-		
-		gl2.glPointSize((float)DisplayMode.getSmallPointSize(mode));
-		gl2.glBegin(GL.GL_POINTS);        	
-		for (Vertex v : graph.vertexSet()) {
-			if(!v.fixed)
-				drawColoredPoint(gl2, v, 1f, 0.5f, 0f);
-		}		
-		gl2.glEnd();	
-		
-		gl2.glPointSize((float)(DisplayMode.getBigPointSize(mode)*1.5));
-		gl2.glBegin(GL.GL_POINTS);        	
-		for (Vertex v : graph.vertexSet()) {
-			if(v.type.toLowerCase().contains("колодец"))
-				drawColoredPoint(gl2, v, 1f, 0f, 1f);
-		}		
-		gl2.glEnd();
-
-		gl2.glPointSize((float)DisplayMode.getBigPointSize(mode)*1.5f);
-		gl2.glBegin(GL.GL_POINTS);        	
-		for (Vertex v : graph.vertexSet()) {
-			if(v.locked)
-				drawColoredPoint(gl2, v, 1f, 0f, 0f);
-		}		
-		gl2.glEnd();
-		
-		System.out.println("drawing overlay");
-		if (overlayGraph != null) {
+		    System.out.println("drawing main lines");
 			gl2.glLineWidth((float)DisplayMode.getStrokeWidth(mode));
 		    gl2.glBegin( GL2.GL_LINES );   
-			for (Edge e : overlayGraph.edgeSet()) {
-			    drawColoredPoint(gl2, e.a, 0, 0, 0); 
-			    drawColoredPoint(gl2, e.b, 0, 0, 0);  
+			for (Edge e : graph.edgeSet()) {
+			    if (e.a.inCycle) {
+			    	drawColoredPoint(gl2, e.a, 0, 1, 1);  
+			    	drawColoredPoint(gl2, e.b, 1, 0, 1); 
+			    	
+			    	toDraw.add(e.a);
+			    	toDraw.add(e.b);
+			    } else if (e.b.inCycle) {
+			    	drawColoredPoint(gl2, e.a, 0, 1, 1);  
+			    	drawColoredPoint(gl2, e.b, 1, 0, 1); 
+			    	
+			    	toDraw.add(e.a);
+			    	toDraw.add(e.b);
+			    }	      
 			}
-		    gl2.glEnd(); 
-		}
-
-		System.out.println("drawing labels");
-		TextRenderer consumptionRenderer = new TextRenderer(new Font("Verdana", Font.BOLD, 9));
-		consumptionRenderer.begin3DRendering();
-		consumptionRenderer.setColor(Color.RED);
-		
-		if (drawConsumption) {
-			for (Vertex v : graph.vertexSet()) {
+		    gl2.glEnd();
+		    
+		    gl2.glPointSize((float)DisplayMode.getBigPointSize(mode));
+			gl2.glBegin(GL.GL_POINTS);        	
+			for (Vertex v : toDraw) {
+				if (!v.inCycle)continue;
+				drawColoredPoint(gl2, v, 0f, 0f, 1f);
+			}		
+			gl2.glEnd();
+		    
+			TextRenderer consumptionRenderer = new TextRenderer(new Font("Verdana", Font.BOLD, 8));
+			consumptionRenderer.begin3DRendering();
+			consumptionRenderer.setColor(Color.RED);
+			
+			for (Vertex v : toDraw) {
+				if (!v.inCycle)continue;
 			    gl2.glPushMatrix(); 
 			    gl2.glTranslated((int)normalizeX(v.x), (int)normalizeY(v.y), 0.0); 
 			    String toRender = String.format("%.1f", v.consumption);
 			    if (v.consumption == -Double.MAX_VALUE)
-			    	toRender = "-INF";
+			    	toRender = "INF";
+			    
+			    toRender = ""+v.oldId;
+			    
 			    consumptionRenderer.draw(toRender, 0, 0);
 			    consumptionRenderer.flush(); 
 			    gl2.glPopMatrix(); 
 			}
-		}
-		consumptionRenderer.end3DRendering();
-		
-		
-		System.out.println("drawing labels");
-		TextRenderer textRenderer = new TextRenderer(new Font("Verdana", Font.BOLD, 9));
-		textRenderer.begin3DRendering();
-		textRenderer.setColor(Color.RED);
-		
-		if (drawLabel) {
-			for (Vertex v : graph.vertexSet()) {				
-			    gl2.glPushMatrix(); 
-			    gl2.glTranslated((int)normalizeX(v.x), (int)normalizeY(v.y), 0.0); 
-				textRenderer.draw(""+v.oldId, 0, 0);
-			    textRenderer.flush(); 
-			    gl2.glPopMatrix(); 
+			consumptionRenderer.end3DRendering();
+	    } else {
+			System.out.println("drawing main lines");
+			gl2.glLineWidth((float)DisplayMode.getStrokeWidth(mode));
+		    gl2.glBegin( GL2.GL_LINES );   
+			for (Edge e : graph.edgeSet()) {
+			    if (!e.a.colored) {
+			    	drawColoredPoint(gl2, e.a, 0, 1, 1);   		    	
+			    } else {
+			    	drawColoredPoint(gl2, e.a, e.a.r, e.a.g, e.a.b); 
+			    }
+			    if (!e.b.colored) {
+			    	drawColoredPoint(gl2, e.b, 1, 0, 1); 		    	
+			    } else {
+			    	drawColoredPoint(gl2, e.b, e.b.r, e.b.g, e.b.b); 
+			    }		      
 			}
-		}
-		if (pointsToLabel!=null) {
-			for (Vertex v : pointsToLabel) {
-			    gl2.glPushMatrix(); 
-			    gl2.glTranslated((int)normalizeX(v.x), (int)normalizeY(v.y), 0.0); 
-				textRenderer.draw(""+v.oldId, 0, 0);
-			    textRenderer.flush(); 
-			    gl2.glPopMatrix(); 
+		    gl2.glEnd(); 
+	
+		    gl2.glLineWidth((float)DisplayMode.getStrokeWidth(mode)*2);
+		    gl2.glBegin( GL2.GL_LINES );   
+			for (Edge e : graph.edgeSet()) {
+				if(e.magical && e.leak > 0) {
+					drawColoredPoint(gl2, e.a, 0.5f, 0, 0.5f); 
+			    	drawColoredPoint(gl2, e.b, 0, 0, 1); 
+				} else if(e.magical) {
+					drawColoredPoint(gl2, e.a, 1, 0.5f, 0); 
+			    	drawColoredPoint(gl2, e.b, 1, 0, 0.5f); 
+				} else if (e.leak > 0) {
+			    	drawColoredPoint(gl2, e.a, 0, 0, 0); 
+			    	drawColoredPoint(gl2, e.b, 0, 0, 0); 
+				} else if (e.canBeMagical) {
+					drawColoredPoint(gl2, e.a, 1, 0.3f, 0); 
+			    	drawColoredPoint(gl2, e.b, 1, 0, 0.3f); 
+				}		      
 			}
-		}
-		textRenderer.end3DRendering();
-		
+		    gl2.glEnd(); 
+		    
+			System.out.println("drawing points");
+			gl2.glPointSize((float)DisplayMode.getBigPointSize(mode)*2f);
+			gl2.glBegin(GL.GL_POINTS);        	
+			for (Vertex v : graph.vertexSet()) {
+				if(v.sensorPlaced)
+					drawColoredPoint(gl2, v, 0f, 0f, 1f);
+			}		
+			gl2.glEnd();
+			
+			gl2.glPointSize((float)(DisplayMode.getBigPointSize(mode)*1.4));
+			gl2.glBegin(GL.GL_POINTS);        	
+			for (Vertex v : graph.vertexSet()) {
+				if(v.pressureTransferCandidate)
+					drawColoredPoint(gl2, v, 0f, 1f, 0f);
+			}		
+			gl2.glEnd();
+			
+			gl2.glPointSize((float)DisplayMode.getBigPointSize(mode)*2f);
+			gl2.glBegin(GL.GL_POINTS);        	
+			for (Vertex v : graph.vertexSet()) {
+				if(v.pumpStationExit)
+					drawColoredPoint(gl2, v, 0f, 1f, 0f);
+			}		
+			gl2.glEnd();
+			
+			gl2.glPointSize((float)DisplayMode.getBigPointSize(mode)*3f);
+			gl2.glBegin(GL.GL_POINTS);        	
+			for (Vertex v : graph.vertexSet()) {
+				if(v.betweenSectorBlock)
+					drawColoredPoint(gl2, v, 1f, 0f, 0.5f);
+			}		
+			gl2.glEnd();
+			
+			gl2.glPointSize((float)DisplayMode.getBigPointSize(mode)*3f);
+			gl2.glBegin(GL.GL_POINTS);        	
+			for (Vertex v : graph.vertexSet()) {
+				if(v.southernPumpStation)
+					drawColoredPoint(gl2, v, 0.5f, 0.5f, 0.5f);
+			}		
+			gl2.glEnd();
+					
+			gl2.glPointSize((float)DisplayMode.getBigPointSize(mode));
+			gl2.glBegin(GL.GL_POINTS);        	
+			for (Vertex v : graph.vertexSet()) {
+				//if(v.type.toLowerCase().contains("колодец"))
+				if(v.placecode > -1)
+					drawColoredPoint(gl2, v, 0f, 0f, 0f);
+			}		
+			gl2.glEnd();
+			
+			gl2.glPointSize((float)DisplayMode.getSmallPointSize(mode));
+			gl2.glBegin(GL.GL_POINTS);        	
+			for (Vertex v : graph.vertexSet()) {
+				if(!v.fixed)
+					drawColoredPoint(gl2, v, 1f, 0.5f, 0f);
+			}		
+			gl2.glEnd();	
+			
+			gl2.glPointSize((float)(DisplayMode.getBigPointSize(mode)*1.1));
+			gl2.glBegin(GL.GL_POINTS);        	
+			for (Vertex v : graph.vertexSet()) {
+				if(v.type.toLowerCase().contains("колодец"))
+					drawColoredPoint(gl2, v, 1f, 0f, 1f);
+			}		
+			gl2.glEnd();
+	
+			gl2.glPointSize((float)DisplayMode.getBigPointSize(mode)*1.5f);
+			gl2.glBegin(GL.GL_POINTS);        	
+			for (Vertex v : graph.vertexSet()) {
+				if(v.locked)
+					drawColoredPoint(gl2, v, 1f, 0f, 0f);
+			}		
+			gl2.glEnd();
+			
+			System.out.println("drawing overlay");
+			if (overlayGraph != null) {
+				gl2.glLineWidth((float)DisplayMode.getStrokeWidth(mode));
+			    gl2.glBegin( GL2.GL_LINES );   
+				for (Edge e : overlayGraph.edgeSet()) {
+				    drawColoredPoint(gl2, e.a, 0, 0, 0); 
+				    drawColoredPoint(gl2, e.b, 0, 0, 0);  
+				}
+			    gl2.glEnd(); 
+			}
+	
+			System.out.println("drawing labels");
+			TextRenderer consumptionRenderer = new TextRenderer(new Font("Verdana", Font.BOLD, 9));
+			consumptionRenderer.begin3DRendering();
+			consumptionRenderer.setColor(Color.GREEN);
+			
+			if (drawConsumption) {
+				for (Vertex v : graph.vertexSet()) {
+				    gl2.glPushMatrix(); 
+				    gl2.glTranslated((int)normalizeX(v.x), (int)normalizeY(v.y), 0.0); 
+				    String toRender = String.format("%.1f", v.consumption);
+				    if (v.consumption == -Double.MAX_VALUE)
+				    	toRender = "-INF";
+				    consumptionRenderer.draw(toRender, 0, 0);
+				    consumptionRenderer.flush(); 
+				    gl2.glPopMatrix(); 
+				}
+			}
+			consumptionRenderer.end3DRendering();
+			
+			
+			System.out.println("drawing labels");
+			TextRenderer textRenderer = new TextRenderer(new Font("Verdana", Font.BOLD, 9));
+			textRenderer.begin3DRendering();
+			textRenderer.setColor(Color.RED);
+			
+			if (drawLabel) {
+				for (Vertex v : graph.vertexSet()) {				
+				    gl2.glPushMatrix(); 
+				    gl2.glTranslated((int)normalizeX(v.x), (int)normalizeY(v.y), 0.0); 
+					textRenderer.draw(""+v.oldId, 0, 0);
+				    textRenderer.flush(); 
+				    gl2.glPopMatrix(); 
+				}
+			}
+			if (pointsToLabel!=null) {
+				for (Vertex v : pointsToLabel) {
+				    gl2.glPushMatrix(); 
+				    gl2.glTranslated((int)normalizeX(v.x), (int)normalizeY(v.y), 0.0); 
+					textRenderer.draw(""+v.oldId, 0, 0);
+				    textRenderer.flush(); 
+				    gl2.glPopMatrix(); 
+				}
+			}
+			textRenderer.end3DRendering();
+	    }
 	}
 	
 	public NetworkVisualizer setOffset(boolean offset){

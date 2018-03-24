@@ -14,6 +14,7 @@ import java.util.stream.Stream;
 import org.educationalProject.surfacePathfinder.visualization.DrawingUtils;
 import org.jgrapht.graph.SimpleWeightedGraph;
 
+import bachelorThesisPlayground.deprecated.BackloggedCycleResolution;
 import bachelorThesisPlayground.deprecated.IsolatedZoneWithSingletonInOut;
 import bachelorThesisPlayground.graphBuilding.GraphBuilding;
 import bachelorThesisPlayground.readers.DBReader;
@@ -22,6 +23,8 @@ import bachelorThesisPlayground.water.flow.WaterFlow;
 
 public class Main {
 
+	public static boolean cycleFlow = false;
+	
 	public static DBReader dbReader = new DBReader();
 	@SuppressWarnings("serial")
 	public static void main(String[] args) {		
@@ -37,7 +40,12 @@ public class Main {
 		
 		WaterFlow.setFlowDirections(component);
 
-		//DrawingUtils.saveGraph("yo_labels", graph, null, null, true, false);	
+		if (cycleFlow) {
+			BackloggedCycleResolution.detectCycles(component);
+			DrawingUtils.saveGraph("yo", component, null, null, false, true);	
+			System.exit(0);
+		}
+		
 		//manual isolated zones
 /*		IsolatedZone iz = new IsolatedZone(component, 
 				Arrays.asList(findEdge(component, 106802401, 106802301)),
@@ -50,10 +58,8 @@ public class Main {
 				),
 				Arrays.asList(findEdge(component, 106873601, 106916701)));
 */		
+		
 		ConsumptionCalculator.cleanNonLeafVertexesWithPlacecodes(component);
-		
-		
-		//BackloggedCycleResolution.detectCycles(component);
 	
 		List<Vertex> brokenPoints = new ArrayList<>();
 		for (int i = 0; i < 3; i++){
@@ -61,8 +67,6 @@ public class Main {
 		}
 		
 		ConsumptionCalculator.recurrentSetWaterConsumption(component);	
-		
-		setPossiblePressureTransferCandidates(component);
 		
 		setCanBeMagical(component);
 
@@ -74,13 +78,12 @@ public class Main {
 		miniComponents = getPointsOfIsolatedComponents(getComponentsIzolatedByPossiblyMagicalEdges(component));
 				
 		//план:
-		/* находим зону с наименьшим весом
-		 * последовательно убираем у волшебные ребра (одно за раз), считаем метрику по графу
-		 * находим ребро, при уборке которого метрика по всему графу - лучшая
-		 * убираем это ребро
-		 * метрика - сумма квадратов
-		 * */
-		
+		// находим зону с наименьшим весом
+		// последовательно убираем у волшебные ребра (одно за раз), считаем метрику по графу
+		// находим ребро, при уборке которого метрика по всему графу - лучшая
+		// убираем это ребро
+		// метрика - сумма квадратов
+		 		
 		int magicalEdgeCount = component.edgeSet()
 				.stream()
 				.mapToInt(e->e.canBeMagical ? 1 : 0)
@@ -103,7 +106,7 @@ public class Main {
 		magicalEdgesOfSmallestComponent.addAll(getEntriesOfComponent(component, smallestComponent));
 		magicalEdgesOfSmallestComponent.addAll(getExitsOfComponent(component, smallestComponent));
 		
-		while (magicalEdgeCount > 150) {
+		while (magicalEdgeCount > 300) {
 			
 			Edge bestEdgeForDeletion = null;
 			double bestMetricValue = Double.MAX_VALUE;
