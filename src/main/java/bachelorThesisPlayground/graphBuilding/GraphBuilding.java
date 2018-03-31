@@ -138,10 +138,8 @@ public class GraphBuilding {
 			}
 			
 			System.out.println(graph.vertexSet().size());
-
-			double edgeDeletingThreshold = 25;//8;
 			
-			Pair<Edge, Vertex> edgeAndPointToDelete = findEdgeAndPointToDelete(graph, edgeDeletingThreshold);
+			Pair<Edge, Vertex> edgeAndPointToDelete = findEdgeAndPointToDelete(graph);
 			while (edgeAndPointToDelete != null){
 				Edge e = edgeAndPointToDelete.getFirst();
 				Vertex pointToSave = (edgeAndPointToDelete.getSecond() == e.a) ? e.b : e.a;
@@ -172,7 +170,7 @@ public class GraphBuilding {
 					}		
 				}				
 							
-				edgeAndPointToDelete = findEdgeAndPointToDelete(graph, edgeDeletingThreshold);
+				edgeAndPointToDelete = findEdgeAndPointToDelete(graph);
 			}
 
 			System.out.println(graph.vertexSet().size());
@@ -427,53 +425,45 @@ public class GraphBuilding {
 		}
 	}
 	
-	public static Pair<Edge, Vertex> findEdgeAndPointToDelete(WeightedGraph<Vertex,Edge> graph, double edgeDeletingThreshold) {
+	public static Pair<Edge, Vertex> findEdgeAndPointToDelete(WeightedGraph<Vertex,Edge> graph) {
 		Iterator<Edge> edgeIterator = graph.edgeSet().iterator();
 		
 		while (edgeIterator.hasNext()) {
 			Edge e = edgeIterator.next();
-			if (e.length < edgeDeletingThreshold) {
-				//avoiding lock transfer
-				if (e.a.locked || e.b.locked ) {
-					continue;
-				}
-				
-				if (e.a.fixed || e.b.fixed ) {
-					continue;
-				}
-				
-				if (e.a.placecode > 0 || e.b.placecode > 0 ) {
-					continue;
-				}
-				
-				
-				boolean aCannotBeDeleted = graph.edgesOf(e.a).size() == 1 || e.a.pumpStationEntry || e.a.pumpStationExit || e.a.betweenSectorBlock || e.a.southernPumpStation || e.a.type.toLowerCase().contains("колодец");
-				boolean bCannotBeDeleted = graph.edgesOf(e.b).size() == 1 || e.b.pumpStationEntry || e.b.pumpStationExit || e.b.betweenSectorBlock || e.b.southernPumpStation || e.b.type.toLowerCase().contains("колодец");				
-				
-				Vertex pointToDelete;
-				if (aCannotBeDeleted && bCannotBeDeleted) {
-					continue;
-				} else if (aCannotBeDeleted) {
-					pointToDelete = e.b;
-				} else if (bCannotBeDeleted) {
-					pointToDelete = e.a;
-				} else {
-					pointToDelete = (graph.edgesOf(e.a).size() < graph.edgesOf(e.b).size()) ? e.a : e.b;
-				}
-				
-				if (e.length > 1) { //to avoid layout artifacts
-					/*if (graph.edgesOf(pointToDelete).size() != 2) {
-						continue;
-					} 	
-					List<Edge> edges = new ArrayList<Edge>(graph.edgesOf(pointToDelete));
-					
-					if (edges.get(0).diameter != edges.get(1).diameter) {
-						continue;
-					}*/continue;
-				}
-				
-				return new Pair<>(e, pointToDelete);
+			//avoiding lock transfer
+			if (e.a.locked || e.b.locked ) {
+				continue;
 			}
+				
+			if (e.a.fixed || e.b.fixed ) {
+				continue;
+			}
+				
+			if (e.a.placecode > 0 || e.b.placecode > 0 ) {
+				continue;
+			}
+				
+				
+			boolean aCannotBeDeleted = graph.edgesOf(e.a).size() == 1 || e.a.pumpStationEntry || e.a.pumpStationExit || e.a.betweenSectorBlock || e.a.southernPumpStation || e.a.type.toLowerCase().contains("колодец");
+			boolean bCannotBeDeleted = graph.edgesOf(e.b).size() == 1 || e.b.pumpStationEntry || e.b.pumpStationExit || e.b.betweenSectorBlock || e.b.southernPumpStation || e.b.type.toLowerCase().contains("колодец");				
+				
+			Vertex pointToDelete;
+			if (aCannotBeDeleted && bCannotBeDeleted) {
+				continue;
+			} else if (aCannotBeDeleted) {
+				pointToDelete = e.b;
+			} else if (bCannotBeDeleted) {
+				pointToDelete = e.a;
+			} else {
+				pointToDelete = (graph.edgesOf(e.a).size() < graph.edgesOf(e.b).size()) ? e.a : e.b;
+			}
+				
+			if (e.length > 1) { //to avoid layout artifacts
+				continue;
+			}
+				
+			return new Pair<>(e, pointToDelete);
+			
 		}
 		
 		edgeIterator = graph.edgeSet().iterator();
