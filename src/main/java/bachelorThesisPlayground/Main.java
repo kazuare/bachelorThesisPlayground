@@ -106,7 +106,7 @@ public class Main {
 		magicalEdgesOfSmallestComponent.addAll(getEntriesOfComponent(component, smallestComponent));
 		magicalEdgesOfSmallestComponent.addAll(getExitsOfComponent(component, smallestComponent));
 		
-		while (magicalEdgeCount > 300) {
+		while (magicalEdgeCount > 350) {
 			
 			Edge bestEdgeForDeletion = null;
 			double bestMetricValue = Double.MAX_VALUE;

@@ -461,15 +461,15 @@ public class GraphBuilding {
 					pointToDelete = (graph.edgesOf(e.a).size() < graph.edgesOf(e.b).size()) ? e.a : e.b;
 				}
 				
-				if (e.length > 2) { //to avoid layout artifacts
-					if (graph.edgesOf(pointToDelete).size() != 2) {
+				if (e.length > 1) { //to avoid layout artifacts
+					/*if (graph.edgesOf(pointToDelete).size() != 2) {
 						continue;
 					} 	
 					List<Edge> edges = new ArrayList<Edge>(graph.edgesOf(pointToDelete));
 					
 					if (edges.get(0).diameter != edges.get(1).diameter) {
 						continue;
-					}
+					}*/continue;
 				}
 				
 				return new Pair<>(e, pointToDelete);
