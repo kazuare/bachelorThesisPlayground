@@ -523,8 +523,10 @@ public class GraphBuilding {
 		CSVGraphReader.populatePlacecodes(points, "C:\\Users\\test\\Desktop\\диплом\\placecode2vert_id.csv");
 		
 		Map<Integer, Double> consumption = Main.dbReader.readConsumption();
+		Map<Integer, String> addresses = Main.dbReader.readAddress();
 		for (Vertex p : points) 
 			if (consumption.get(p.placecode)!=null){
+				p.address = addresses.get(p.placecode);
 				if (consumption.get(p.placecode) != 0) {
 					p.consumption = consumption.get(p.placecode);
 					System.out.println("Vertex " + p + " has consumption level " + p.consumption);

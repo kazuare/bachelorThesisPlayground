@@ -30,6 +30,7 @@ public class Vertex {
 	public float b = -1;
 	public int zoneIndex = -1;
 	
+	public String address = null;
 	
 	public Vertex(int id) {
 		this.id = id;			

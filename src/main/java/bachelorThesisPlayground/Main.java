@@ -1,28 +1,24 @@
 package bachelorThesisPlayground;
 
-import java.text.DecimalFormat;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import org.educationalProject.surfacePathfinder.visualization.DrawingUtils;
 import org.jgrapht.graph.SimpleWeightedGraph;
 
 import bachelorThesisPlayground.deprecated.BackloggedCycleResolution;
-import bachelorThesisPlayground.deprecated.IsolatedZoneWithSingletonInOut;
 import bachelorThesisPlayground.graphBuilding.GraphBuilding;
 import bachelorThesisPlayground.readers.DBReader;
 import bachelorThesisPlayground.water.flow.ConsumptionCalculator;
 import bachelorThesisPlayground.water.flow.WaterFlow;
+import google.map.api.MapsApi;
 
 public class Main {
-
 	public static boolean cycleFlow = false;
 	
 	public static DBReader dbReader = new DBReader();
@@ -61,6 +57,9 @@ public class Main {
 		
 		ConsumptionCalculator.cleanNonLeafVertexesWithPlacecodes(component);
 	
+		//Vertex pointToBreak = component.vertexSet().stream().filter(e->e.oldId==106894001).findFirst().get();		
+		//new ArrayList<>(component.edgesOf(pointToBreak)).get(0).leak = Math.random()*0.8 + 0.2;
+		
 		List<Vertex> brokenPoints = new ArrayList<>();
 		for (int i = 0; i < 3; i++){
 			//brokenPoints.add(reasonablyBreakSomething(component));
@@ -90,12 +89,9 @@ public class Main {
 				.sum();
 		
 		System.out.println("Maximum magical edge count: " + magicalEdgeCount);
-		System.out.println("Initial metric value is " + new DecimalFormat("#.###")
-				.format(getSquareSum(component, miniComponents)));
-		System.out.println("Initial mean weight is " + new DecimalFormat("#.###")
-				.format(getAverageWeight(component, miniComponents)));
-		System.out.println("Initial minimal weight is " + new DecimalFormat("#.###")
-				.format(getWeightOfSmallestComponent(component, miniComponents)));
+		System.out.println("Initial metric value is " + getSquareSum(component, miniComponents));
+		System.out.println("Initial mean weight is " + getAverageWeight(component, miniComponents));
+		System.out.println("Initial minimal weight is " + getWeightOfSmallestComponent(component, miniComponents));
 		
 		Set<Vertex> smallestComponent = miniComponents.stream()
 				.min((a,b)->
@@ -156,11 +152,9 @@ public class Main {
 			
 			System.out.println("Unmagicked " + best.id + ", " + magicalEdgeCount + " edges left");
 			double metricValue = getSquareSum(component, miniComponents);
-			System.out.println("Metric value is " + new DecimalFormat("#.###").format(metricValue));
-			System.out.println("Mean weight is " + new DecimalFormat("#.###")
-					.format(getAverageWeight(component, miniComponents)));
-			System.out.println("Minimal weight is " + new DecimalFormat("#.###")
-					.format(getWeightOfSmallestComponent(component, miniComponents)));
+			System.out.println("Metric value is " + metricValue);
+			System.out.println("Mean weight is " + getAverageWeight(component, miniComponents));
+			System.out.println("Minimal weight is " + getWeightOfSmallestComponent(component, miniComponents));
 			System.out.println();
 			
 			smallestComponent = miniComponents.stream()
@@ -186,12 +180,21 @@ public class Main {
 					));
 		}
 		
+		List<Vertex> affectedConsumers = new ArrayList<>();
+		
 		for (IsolatedZone zone : zones) {
 			String result = zone.zoneCheck();
-			if (!"OK".equals(result))
+			if (!"OK".equals(result)) {
 				System.out.println(result);
+				affectedConsumers.addAll(zone.getConsumers());
+			}
 		}
-			
+		
+		System.out.println("Affected: " + affectedConsumers
+				.stream()
+				.map(p->MapsApi.prepareForGoogleStatics(p.address))
+				.collect(Collectors.toList()));
+					
 		int shouldSeeNoMoreXErrors = 0;
 		for (Edge e : component.edgeSet()) {
 			if (e.leak > 0) 
@@ -210,7 +213,11 @@ public class Main {
 		
 		DrawingUtils.saveGraph("yo", component, null, null, false, true);	
 		
-		
+		try {
+			MapsApi.renderAffectedConsumers(affectedConsumers);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public static double getMiniComponentWeight(SimpleWeightedGraph<Vertex,Edge> graph, Set<Vertex> component) {
@@ -419,34 +426,4 @@ public class Main {
 }
 
 
-/*
- dbReader.init();
-		
-		SimpleWeightedGraph<Vertex,Edge> graph = GraphBuilding.getColoredGraph();		
-		
-		List<SimpleWeightedGraph<Vertex,Edge>> components = Utils.graphSplit(graph);
-		
-		//SimpleWeightedGraph<Vertex,Edge> chosenComponent = components.stream().filter(
-		//		e->e.vertexSet().stream().filter(v->v.pumpStationExit).findAny().get().oldId == 185933001
-		//).findAny().get();
-		
-		WaterFlow.setFlowDirections(components);
-
-		//DrawingUtils.saveGraph("yo_labels", graph, null, null, true, false);	
-		
-		IsolatedZone iz = new IsolatedZone(graph, findEdge(graph, 106454301, 106547001),
-													findEdge(graph, 106771601, 106771401));
-		
-		for(int i = 0; i < 5; i++) {			
-			SimpleWeightedGraph<Vertex,Edge> currentComponent = components.get(i);
-			//BackloggedCycleResolution.detectCycles(currentComponent);
-			ConsumptionCalculator.cleanNonLeafVertexesWithPlacecodes(currentComponent);
-			Vertex focusPoint = breakSomething(currentComponent);
-			ConsumptionCalculator.recurrentSetWaterConsumption(currentComponent);	
-			//DrawingUtils.drawGraphWithAttentionPoint(currentComponent, focusPoint);			
-		}
-		
-		//DrawingUtils.saveGraph("yo", graph, null, null, false, true);	
-		
- * */
 

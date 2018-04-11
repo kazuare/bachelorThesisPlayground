@@ -1,6 +1,7 @@
 package bachelorThesisPlayground;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -119,6 +120,10 @@ public class IsolatedZone {
 			}
 			return "Leak event: " + getEntryFlow() + " " + getInnerConsumption() + " " + getExitFlow();
 		}
+	}
+	
+	public List<Vertex> getConsumers() {
+		return Collections.unmodifiableList(consumers);
 	}
 }
 

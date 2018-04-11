@@ -35,6 +35,19 @@ public class DBReader {
 		return result;
 	}
 	
+	public Map<Integer, String> readAddress() {
+		Map<Integer, String> result = new HashMap<>();
+		try {
+			ResultSet message = dayConsumption.executeQuery();
+			while (message.next()) 
+				result.put(message.getInt("placecode"), message.getString("place_address"));
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return result;
+	}
+	
 	public void init() {		
 		try {			
 			Class.forName("org.postgresql.Driver");

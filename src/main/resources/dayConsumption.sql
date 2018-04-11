@@ -1,71 +1,27 @@
-SELECT
-  (CASE WHEN (a.accvolume IS NULL)
-    THEN
-      b.volume - a.volume
-   ELSE (b.volume - b.accvolume) - (a.volume - a.accvolume)
-   END) as consumption,
-  placecode
-FROM
-  (
-    SELECT
-      export."CounterData_Minute".device_identification AS id,
-      volume_m3                                         AS volume,
-      volume_acc_m3                                     AS accvolume,
-      place_code                                        AS placecode
-    FROM export."CounterData_Minute"
-      JOIN export.meters
-        ON export."CounterData_Minute".device_identification = export.meters.device_identification
-    WHERE export."CounterData_Minute".device_identification IN
-          (
-            (
-              SELECT device_identification
-              FROM export.meters
-              WHERE
-                '2017-11-29 00:00' :: TIMESTAMP > lower(active) AND upper(active) IS NULL
-            )
-            UNION
-            (
-              SELECT device_identification
-              FROM export.meters
-              WHERE
-                upper(active) IS NOT NULL AND '2017-11-29 00:00' :: TIMESTAMP <@ active
-                AND
-                '2017-11-30 00:00' :: TIMESTAMP <@ active
-            )
-          )
-          AND created_datetime_rounded = '2017-11-29 00:00' :: TIMESTAMP
-          AND device_type = 14
-  ) a
+SELECT export.meters.place_code as placecode,
+       (b.volume_m3 - a.volume_m3)/(30*24) as consumption,
+       place_address
+  FROM
+    (
+      SELECT *
+      FROM export."CounterData_Minute"
+      WHERE
+        created_datetime_rounded = '2017-11-01 00:00:00' :: TIMESTAMP
+    ) a
   JOIN
-  (
-    SELECT
-      export."CounterData_Minute".device_identification AS id,
-      volume_m3                                         AS volume,
-      volume_acc_m3                                     AS accvolume
-    FROM export."CounterData_Minute"
-      JOIN export.meters
-        ON export."CounterData_Minute".device_identification = export.meters.device_identification
-    WHERE export."CounterData_Minute".device_identification IN
-          (
-            (
-              SELECT device_identification
-              FROM export.meters
-              WHERE
-                '2017-11-29 00:00' :: TIMESTAMP > lower(active) AND upper(active) IS NULL
-            )
-            UNION
-            (
-              SELECT device_identification
-              FROM export.meters
-              WHERE
-                upper(active) IS NOT NULL AND '2017-11-29 00:00' :: TIMESTAMP <@ active
-                AND
-                '2017-11-30 00:00' :: TIMESTAMP <@ active
-            )
-          )
-          AND created_datetime_rounded = '2017-11-30 00:00' :: TIMESTAMP
-          AND device_type = 14
-  ) b
-    ON a.id = b.id
--- order by consumption DESC
+    (
+      SELECT *
+      FROM export."CounterData_Minute"
+      WHERE
+        created_datetime_rounded = '2017-11-30 00:00:00' :: TIMESTAMP
+    ) b
+  ON a.device_identification = b.device_identification
+  JOIN export.meters
+  ON
+    export.meters.device_identification = a.device_identification
+    AND
+    export.meters.device_type = 14
+  JOIN export.sdp
+  ON
+    export.sdp.place_code = export.meters.place_code
 ;
